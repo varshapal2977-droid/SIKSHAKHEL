@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Send } from 'lucide-react';
 import { contactConfig } from '../config';
+import { submitContactForm } from '../services/contactService';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +25,9 @@ export function Contact() {
     message: '',
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submissionMessage, setSubmissionMessage] = useState<string>('');
 
   if (!contactConfig.title) return null;
 
@@ -139,9 +143,28 @@ export function Contact() {
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    setIsSubmitting(true);
+    setSubmissionStatus('idle');
+    setSubmissionMessage('');
+
+    try {
+      const id = await submitContactForm(formData);
+      setSubmissionStatus('success');
+      setSubmissionMessage(`Message sent successfully (ID: ${id})`);
+      setFormData({ name: '', email: '', projectType: '', message: '' });
+    } catch (error: unknown) {
+      console.error('Failed to submit contact form', error);
+      setSubmissionStatus('error');
+      setSubmissionMessage(
+        error instanceof Error
+          ? error.message
+          : 'Failed to submit. Please try again later.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (
@@ -344,12 +367,25 @@ export function Contact() {
             <button
               ref={buttonRef}
               type="submit"
-              className="mt-12 px-10 py-4 bg-white text-black text-body font-medium flex items-center gap-3 hover:bg-highlight hover:text-white transition-colors duration-300 relative overflow-hidden group"
+              disabled={isSubmitting}
+              className="mt-12 px-10 py-4 bg-white text-black text-body font-medium flex items-center gap-3 hover:bg-highlight hover:text-white transition-colors duration-300 relative overflow-hidden group disabled:opacity-50 disabled:cursor-wait"
             >
-              <span className="relative z-10">{contactConfig.submitButtonText}</span>
+              <span className="relative z-10">
+                {isSubmitting ? 'Sending...' : contactConfig.submitButtonText}
+              </span>
               <Send className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
               <div className="absolute inset-0 bg-highlight transform -translate-x-full group-hover:translate-x-0 transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]" />
             </button>
+
+            {submissionStatus !== 'idle' && (
+              <p
+                className={`mt-4 text-sm ${
+                  submissionStatus === 'success' ? 'text-emerald-400' : 'text-rose-400'
+                }`}
+              >
+                {submissionMessage}
+              </p>
+            )}
           </form>
 
           {/* Image side */}

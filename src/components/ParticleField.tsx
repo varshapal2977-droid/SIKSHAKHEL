@@ -38,9 +38,9 @@ export function ParticleField() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Check if touch device - reduce particles
+  // Check if touch device - reduce particles significantly for performance
     const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-    const particleCount = isTouchDevice ? 12 : 25;
+    const particleCount = isTouchDevice ? 8 : 15; // Reduced from 12/25 to 8/15
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -113,7 +113,7 @@ export function ParticleField() {
           if (particle.y < -30) particle.y = canvas.height + 30;
           if (particle.y > canvas.height + 30) particle.y = -30;
 
-          // Draw emoji with rotation
+          // Draw emoji with rotation (simplified for performance)
           ctx.save();
           ctx.translate(particle.x, particle.y);
           ctx.rotate((particle.rotation * Math.PI) / 180);
@@ -124,19 +124,13 @@ export function ParticleField() {
           ctx.fillText(particle.emoji, 0, 0);
           ctx.restore();
           
-          // Draw glow effect
-          const glowSize = particle.size * 1.5;
-          const gradient = ctx.createRadialGradient(
-            particle.x, particle.y, 0,
-            particle.x, particle.y, glowSize
-          );
-          gradient.addColorStop(0, particle.color + '0.2)');
-          gradient.addColorStop(1, particle.color + '0)');
-          
+          // Simple glow (no gradient for better performance)
+          ctx.globalAlpha = particle.opacity * 0.2;
           ctx.beginPath();
-          ctx.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2);
-          ctx.fillStyle = gradient;
+          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          ctx.fillStyle = particle.color + '0.3)';
           ctx.fill();
+          ctx.globalAlpha = particle.opacity;
         });
       }
 

@@ -100,6 +100,10 @@ export interface WorkItem {
   title: string;
   category: string;
   image: string;
+  class?: string;
+  subject?: string;
+  type?: 'game' | 'video';
+  contentUrl?: string;
 }
 
 export interface WorksConfig {
@@ -408,7 +412,7 @@ export const contactConfig: ContactConfig = {
   title: "Start Your Child's Learning Journey",
   subtitle: "Join thousands of families across rural India making education fun and affordable!",
   nameLabel: "Parent's Name *",
-  emailLabel: "Mobile Number *",
+  emailLabel: "Email Address *",
   projectTypeLabel: "Child's Class",
   projectTypePlaceholder: "Select class...",
   projectTypeOptions: [

@@ -1,17 +1,50 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User as UserIcon } from 'lucide-react';
 import { navigationConfig } from '../config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export function Navigation() {
+interface NavigationProps {
+  onLoginClick?: () => void;
+  isGuestChild?: boolean;
+  parentChildName?: string;
+}
+
+export function Navigation({ onLoginClick, isGuestChild, parentChildName }: NavigationProps) {
   const navRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState<string | null>(null);
 
-  if (!navigationConfig.logo) return null;
+  useEffect(() => {
+    // Check for returning guest child name
+    const storedGuestName = localStorage.getItem('guestChildName') || parentChildName;
+    if (storedGuestName) {
+      setGuestName(storedGuestName);
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Fetch user's name from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserName(userDoc.data().fullName || userDoc.data().email?.split('@')[0] || "User");
+        } else {
+          setUserName(user.email?.split('@')[0] || "User");
+        }
+      } else {
+        setUserName(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [parentChildName]);
 
   useEffect(() => {
     const trigger = ScrollTrigger.create({
@@ -69,6 +102,30 @@ export function Navigation() {
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-highlight group-hover:w-full transition-all duration-300" />
               </a>
             ))}
+            
+            {/* Login button / Welcome message */}
+            <button
+              onClick={onLoginClick}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${
+                userName || guestName
+                  ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm' 
+                  : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:brightness-110 shadow-cyan-500/25'
+              }`}
+            >
+              {userName ? (
+                <>
+                  <UserIcon className="w-4 h-4 text-cyan-400" />
+                  <span>Welcome, {userName.split(' ')[0]}</span>
+                </>
+              ) : guestName ? (
+                <>
+                  <UserIcon className="w-4 h-4 text-cyan-400" />
+                  <span>Welcome back, {guestName.split(' ')[0]}!</span>
+                </>
+              ) : (
+                'Login'
+              )}
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -111,6 +168,40 @@ export function Navigation() {
               {item.label}
             </a>
           ))}
+          
+          {/* Mobile Login button / Welcome message */}
+          <button
+            onClick={() => {
+              onLoginClick?.();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`mt-4 flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 ${
+              userName || guestName
+                ? 'bg-white/10 text-white border border-white/20' 
+                : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-lg shadow-cyan-500/25'
+            }`}
+            style={{
+              transform: isMobileMenuOpen
+                ? 'translateY(0)'
+                : 'translateY(20px)',
+              opacity: isMobileMenuOpen ? 1 : 0,
+              transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${navigationConfig.items.length * 0.1}s`,
+            }}
+          >
+            {userName ? (
+              <>
+                <UserIcon className="w-5 h-5 text-cyan-400" />
+                <span>Welcome, {userName.split(' ')[0]}</span>
+              </>
+            ) : guestName ? (
+              <>
+                <UserIcon className="w-5 h-5 text-cyan-400" />
+                <span>Welcome back, {guestName.split(' ')[0]}!</span>
+              </>
+            ) : (
+              'Login'
+            )}
+          </button>
         </div>
       </div>
     </>

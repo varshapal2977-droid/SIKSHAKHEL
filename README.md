@@ -82,6 +82,17 @@ public/
    npm run build
    ```
 
+## Firebase Backend Setup (Contact + Auth)
+
+1. Create a Firebase project at https://console.firebase.google.com.
+2. Enable Authentication > Sign-in method > Phone.
+3. Enable Firestore Database in test mode.
+4. Add your Firebase config values to `.env` (copy from `.env.example`).
+5. Restart Vite (`npm run dev`).
+
+The contact form stores submissions in Firestore collection `contacts`.
+The login component uses phone OTP via Firebase Auth.
+
 ## Configuration
 
 All content is configured in `src/config.ts`. Each section has its own config object with TypeScript interfaces.
