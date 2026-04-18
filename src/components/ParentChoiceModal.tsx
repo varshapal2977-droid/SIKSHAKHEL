@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
 import { Baby, Users, ArrowRight, TrendingUp, Zap, Clock } from 'lucide-react';
-import type { ChildProfile } from './AdminDashboard';
+import type { ChildProfile } from '../types/childProgress';
 
 interface ParentData {
   fullName: string;
   email: string;
   childName: string;
   childClass: string;
+  childAge?: string;
+  schoolName?: string;
+  learningGoal?: string;
 }
 
 interface ParentChoiceModalProps {

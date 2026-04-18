@@ -6,11 +6,8 @@ import {
   Plus, 
   Trash2, 
   Edit3, 
-  Save, 
   LogOut, 
   CheckCircle2,
-  XCircle,
-  Image as ImageIcon,
   Type,
   FileCode,
   Upload,
@@ -33,7 +30,8 @@ import { worksConfig, servicesConfig, heroConfig, siteConfig } from '../config';
 import type { WorkItem } from '../config';
 import { storage, db } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, onSnapshot, query, orderBy, deleteDoc, getDocs, where } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, onSnapshot, query, orderBy, deleteDoc, getDocs, where } from 'firebase/firestore';
+import type { ChildProfile } from '../types/childProgress';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -60,23 +58,20 @@ interface UserProfile {
   childrenCount: number;
 }
 
-export interface ChildProfile {
-  id: string;
-  parentId: string;
-  name: string;
-  grade: string;
-  progress: number;
-  streak: number;
-  lastActive: string;
-}
-
-export function AdminDashboard({ onLogout, isParentDashboard, parentData }: AdminDashboardProps) {
+export function AdminDashboard({ onLogout, isParentDashboard }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'users' | 'settings'>(isParentDashboard ? 'overview' : 'overview');
   const [contentClassTab, setContentClassTab] = useState<'Class 1' | 'Class 2' | 'Class 3' | 'All'>('Class 1');
   const [successMessage, setSuccessMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [contentUploadProgress, setContentUploadProgress] = useState<number | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingContent, setIsUploadingContent] = useState(false);
+  const [isSavingContent, setIsSavingContent] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [contentUploadError, setContentUploadError] = useState('');
+  const [contentSaveError, setContentSaveError] = useState('');
+  const [editingContentId, setEditingContentId] = useState<number | null>(null);
   
   // User Management State
    const [users, setUsers] = useState<UserProfile[]>([]);
@@ -96,10 +91,11 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
      contentUrl: '/gamesss.html'
    });
    const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentFileInputRef = useRef<HTMLInputElement>(null);
  
    // Local state for editable content
    const [localWorks, setLocalWorks] = useState(worksConfig);
-   const [localServices, setLocalServices] = useState(servicesConfig);
+   const [localServices] = useState(servicesConfig);
    const [localHero, setLocalHero] = useState(heroConfig);
    const [localSite, setLocalSite] = useState(siteConfig);
 
@@ -118,13 +114,24 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
     // Real-time sync with Firestore for users
     const userQuery = query(collection(db, "users"), orderBy("createdAt", "desc"));
     const unsubscribeUsers = onSnapshot(userQuery, (snapshot) => {
-      const userData = snapshot.docs.map(doc => ({
-        uid: doc.id,
-        ...doc.data(),
-        status: doc.data().status || 'active',
-        subscription: doc.data().subscription || 'free',
-        childrenCount: doc.data().childrenCount || 0
-      } as UserProfile));
+      const userData = snapshot.docs.map(doc => {
+        const raw = doc.data() as Partial<UserProfile> & { phoneNumber?: string };
+        const resolvedName = raw.fullName || (raw.email ? raw.email.split('@')[0] : 'Unnamed User');
+        const resolvedPhone = raw.phone || raw.phoneNumber || '';
+
+        return {
+          uid: doc.id,
+          fullName: resolvedName,
+          email: raw.email || '',
+          phone: resolvedPhone,
+          age: raw.age ?? 0,
+          status: raw.status || 'active',
+          subscription: raw.subscription || 'free',
+          createdAt: raw.createdAt || '',
+          lastLogin: raw.lastLogin || '',
+          childrenCount: raw.childrenCount || 0
+        } as UserProfile;
+      });
       setUsers(userData);
     });
 
@@ -133,6 +140,32 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
       unsubscribeUsers();
     };
   }, []);
+
+  const resetContentForm = () => {
+    setNewGame({
+      title: '',
+      category: '',
+      image: '',
+      class: '',
+      subject: '',
+      type: 'game',
+      contentUrl: '/gamesss.html',
+    });
+    setEditingContentId(null);
+    setUploadError('');
+    setContentUploadError('');
+    setContentSaveError('');
+    setUploadProgress(null);
+    setContentUploadProgress(null);
+    setIsUploading(false);
+    setIsUploadingContent(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (contentFileInputRef.current) {
+      contentFileInputRef.current.value = '';
+    }
+  };
 
   const handleSave = (section: string) => {
     setSuccessMessage(`${section} updated successfully!`);
@@ -172,70 +205,181 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
     }
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadFileToStorage = (
+    file: File,
+    folder: 'content' | 'thumbnails',
+    setProgress: (progress: number | null) => void,
+    setUploading: (value: boolean) => void,
+    setError: (value: string) => void,
+  ) => {
+    setError('');
+    setUploading(true);
+    setProgress(0);
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const storageRef = ref(storage, `content/${Date.now()}_${file.name}`);
+    // Keep uploads inside /content for compatibility with common Firebase storage rules.
+    const storagePath =
+      folder === 'thumbnails'
+        ? `content/thumbnails/${Date.now()}_${file.name}`
+        : `content/videos/${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
+    let hasProgress = false;
 
-    uploadTask.on('state_changed', 
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(Math.round(progress));
-      }, 
-      (error) => {
-        console.error("Upload failed:", error);
-        setIsUploading(false);
-        setUploadProgress(null);
-      }, 
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        setNewGame(prev => ({ ...prev, image: downloadURL }));
-        setIsUploading(false);
-        setUploadProgress(null);
-        setSuccessMessage("File uploaded successfully!");
-        setTimeout(() => setSuccessMessage(''), 3000);
+    // Give enough time for larger video/image uploads.
+    const stallTimeout = window.setTimeout(() => {
+      if (!hasProgress) {
+        uploadTask.cancel();
+        setUploading(false);
+        setProgress(null);
+        setError('Upload timed out. Please check internet/Firebase storage rules and try again.');
       }
-    );
+    }, 120000);
+
+    return new Promise<string>((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          if (snapshot.bytesTransferred > 0) hasProgress = true;
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setProgress(Math.round(progress));
+        },
+        (error) => {
+          window.clearTimeout(stallTimeout);
+          console.error('Upload failed:', error);
+          setUploading(false);
+          setProgress(null);
+          setError('Upload failed. Please try again.');
+          reject(error);
+        },
+        async () => {
+          window.clearTimeout(stallTimeout);
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploading(false);
+          setProgress(null);
+          setError('');
+          resolve(downloadURL);
+        }
+      );
+    });
   };
 
-  const handleAddGame = async () => {
-    if (!newGame.title || !newGame.image) return;
+  const handleThumbnailSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image file for thumbnail.');
+      return;
+    }
 
-    const gameId = Date.now();
+    try {
+      const downloadURL = await uploadFileToStorage(file, 'thumbnails', setUploadProgress, setIsUploading, setUploadError);
+      setNewGame(prev => ({ ...prev, image: downloadURL }));
+      setSuccessMessage('Thumbnail uploaded successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch {
+      // Handled in upload helper
+    }
+  };
+
+  const handleContentVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('video/')) {
+      setContentUploadError('Please upload a video file.');
+      return;
+    }
+
+    try {
+      const downloadURL = await uploadFileToStorage(
+        file,
+        'content',
+        setContentUploadProgress,
+        setIsUploadingContent,
+        setContentUploadError,
+      );
+      setNewGame(prev => ({ ...prev, contentUrl: downloadURL, type: 'video' }));
+      setSuccessMessage('Video uploaded successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch {
+      // Handled in upload helper
+    }
+  };
+
+  const handleSaveGame = async () => {
+    if (!newGame.title?.trim()) {
+      setContentSaveError('Please enter a content title.');
+      return;
+    }
+    if (!newGame.class) {
+      setContentSaveError('Please select class.');
+      return;
+    }
+    if (!newGame.subject) {
+      setContentSaveError('Please select subject.');
+      return;
+    }
+    if (!newGame.contentUrl?.trim()) {
+      setContentSaveError('Please enter content URL/redirection path.');
+      return;
+    }
+    if (newGame.type === 'video' && isUploadingContent) {
+      setContentSaveError('Please wait for video upload to complete.');
+      return;
+    }
+
+    const gameId = editingContentId ?? Date.now();
+    const thumbnail = newGame.image || '/images/classroom.jpg';
     const gameToAdd: WorkItem = {
       id: gameId,
-      title: newGame.title!,
+      title: newGame.title.trim(),
       category: newGame.category || `${newGame.subject || 'General'} - ${newGame.class || 'All Classes'}`,
-      image: newGame.image!,
+      image: thumbnail,
       class: newGame.class || '',
       subject: newGame.subject || '',
       type: newGame.type || 'game',
-      contentUrl: newGame.contentUrl || '/gamesss.html'
+      contentUrl: newGame.contentUrl?.trim() || '/gamesss.html'
     };
 
     try {
-      await setDoc(doc(db, "content", gameId.toString()), gameToAdd);
+      setIsSavingContent(true);
+      setContentSaveError('');
+      await setDoc(doc(db, "content", gameId.toString()), {
+        ...gameToAdd,
+        updatedAt: new Date().toISOString(),
+        ...(editingContentId ? {} : { createdAt: new Date().toISOString() }),
+      }, { merge: true });
       setIsModalOpen(false);
-      setNewGame({ 
-        title: '', 
-        category: '', 
-        image: '', 
-        class: '', 
-        subject: '', 
-        type: 'game', 
-        contentUrl: '/gamesss.html' 
-      });
-      setSuccessMessage("New content added successfully!");
+      resetContentForm();
+      setSuccessMessage(editingContentId ? "Content updated successfully!" : "New content added successfully!");
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error("Error adding content:", err);
-      alert("Failed to add content. Check your Firebase permissions.");
+      setContentSaveError("Failed to save content. Check Firebase rules and try again.");
+    } finally {
+      setIsSavingContent(false);
     }
+  };
+
+  const handleOpenAddModal = () => {
+    resetContentForm();
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (game: WorkItem) => {
+    setEditingContentId(game.id);
+    setContentSaveError('');
+      setUploadError('');
+      setContentUploadError('');
+    setNewGame({
+      title: game.title || '',
+      category: game.category || '',
+      image: game.image || '',
+      class: game.class || '',
+      subject: game.subject || '',
+      type: game.type || 'game',
+      contentUrl: game.contentUrl || '/gamesss.html',
+    });
+    setIsModalOpen(true);
   };
 
   const handleDeleteGame = async (id: number) => {
@@ -285,7 +429,7 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                 <X className="w-6 h-6 text-slate-400" />
               </button>
 
-              <h3 className="text-3xl font-black mb-8">Add New Content</h3>
+              <h3 className="text-3xl font-black mb-8">{editingContentId ? 'Update Content' : 'Add New Content'}</h3>
 
               <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4 scrollbar-thin">
                 <div className="space-y-2">
@@ -295,6 +439,7 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                     placeholder="e.g. Number Bonds"
                     value={newGame.title}
                     onChange={(e) => setNewGame({...newGame, title: e.target.value})}
+                      disabled={isUploading || isUploadingContent || isSavingContent}
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-cyan-400/50 outline-none"
                   />
                 </div>
@@ -305,6 +450,7 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                     <select 
                       value={newGame.class}
                       onChange={(e) => setNewGame({...newGame, class: e.target.value})}
+                      disabled={isUploading || isUploadingContent || isSavingContent}
                       className="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-cyan-400/50 outline-none appearance-none"
                     >
                       <option value="" disabled>Select Class</option>
@@ -319,6 +465,7 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                     <select 
                       value={newGame.subject}
                       onChange={(e) => setNewGame({...newGame, subject: e.target.value})}
+                      disabled={isUploading || isUploadingContent || isSavingContent}
                       className="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-cyan-400/50 outline-none appearance-none"
                     >
                       <option value="" disabled>Select Subject</option>
@@ -337,6 +484,7 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                         <button
                           key={type}
                           onClick={() => setNewGame({...newGame, type: type as 'game' | 'video'})}
+                          disabled={isUploading || isUploadingContent || isSavingContent}
                           className={`flex-1 py-3 rounded-xl border font-bold capitalize transition-all ${
                             newGame.type === type 
                               ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400' 
@@ -350,31 +498,65 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-400 ml-1">Content (Redirection)</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. /gamesss.html"
-                      value={newGame.contentUrl}
-                      onChange={(e) => setNewGame({...newGame, contentUrl: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-cyan-400/50 outline-none"
-                    />
+                    {newGame.type === 'video' ? (
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => contentFileInputRef.current?.click()}
+                          disabled={isUploading || isUploadingContent || isSavingContent}
+                          className="w-full rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-left text-sm font-bold text-slate-300 hover:border-cyan-400/60 hover:text-white transition-all disabled:opacity-60"
+                        >
+                          {isUploadingContent ? 'Uploading video...' : 'Upload video file from computer'}
+                        </button>
+                        <input
+                          type="file"
+                          ref={contentFileInputRef}
+                          onChange={handleContentVideoSelect}
+                          className="hidden"
+                          accept="video/*"
+                        />
+                        {isUploadingContent && (
+                          <div className="w-full">
+                            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                              <motion.div
+                                className="h-full bg-cyan-400"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${contentUploadProgress || 0}%` }}
+                              />
+                            </div>
+                            <p className="mt-1 text-xs font-bold text-cyan-400">
+                              {contentUploadProgress || 0}% uploaded
+                            </p>
+                          </div>
+                        )}
+                        {newGame.contentUrl && (
+                          <p className="text-xs text-emerald-400 break-all">Video URL ready: {newGame.contentUrl}</p>
+                        )}
+                        {contentUploadError && (
+                          <p className="text-xs font-bold text-rose-400">{contentUploadError}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <input 
+                        type="text" 
+                        placeholder="e.g. /gamesss.html"
+                        value={newGame.contentUrl}
+                        onChange={(e) => setNewGame({...newGame, contentUrl: e.target.value})}
+                        disabled={isUploading || isUploadingContent || isSavingContent}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 focus:border-cyan-400/50 outline-none"
+                      />
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-400 ml-1">Thumbnail (Image or Video)</label>
+                  <label className="text-sm font-bold text-slate-400 ml-1">Thumbnail (Image)</label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative w-full aspect-video rounded-2xl border-2 border-dashed border-white/10 bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-400/50 hover:bg-white/10 transition-all overflow-hidden ${isUploading ? 'pointer-events-none' : ''}`}
                   >
                     {newGame.image ? (
-                      newGame.image.includes('.mp4') || newGame.image.includes('video') || (newGame.image.includes('firebasestorage') && newGame.image.includes('content%2F')) ? (
-                        <div className="flex flex-col items-center text-cyan-400">
-                          <Video className="w-12 h-12 mb-2" />
-                          <span className="text-sm font-bold">Video Preview Uploaded</span>
-                        </div>
-                      ) : (
-                        <img src={newGame.image} className="w-full h-full object-cover" alt="Preview" />
-                      )
+                      <img src={newGame.image} className="w-full h-full object-cover" alt="Preview" />
                     ) : (
                       <>
                         {isUploading ? (
@@ -404,18 +586,37 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                   <input 
                     type="file" 
                     ref={fileInputRef} 
-                    onChange={handleFileSelect} 
+                    onChange={handleThumbnailSelect} 
                     className="hidden" 
-                    accept="image/*,video/*"
+                    accept="image/*"
                   />
+                  {uploadError && (
+                    <p className="text-xs font-bold text-rose-400">{uploadError}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewGame(prev => ({ ...prev, image: '/images/classroom.jpg' }));
+                      setUploadError('');
+                      setUploadProgress(null);
+                      setIsUploading(false);
+                    }}
+                    className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    Use default thumbnail
+                  </button>
                 </div>
 
+                {contentSaveError && (
+                  <p className="text-xs font-bold text-rose-400">{contentSaveError}</p>
+                )}
+
                 <button
-                  onClick={handleAddGame}
-                  disabled={!newGame.title || !newGame.image || isUploading}
+                  onClick={handleSaveGame}
+                  disabled={!newGame.title || !newGame.class || !newGame.subject || !newGame.contentUrl || isUploading || isUploadingContent || isSavingContent}
                   className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-bold text-white shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  Confirm & Add Content
+                  {isSavingContent ? 'Saving...' : (editingContentId ? 'Confirm & Update Content' : 'Confirm & Add Content')}
                 </button>
               </div>
             </motion.div>
@@ -690,17 +891,22 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {users
-                        .filter(u => u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || u.phone.includes(searchQuery))
+                        .filter(u => {
+                          const name = (u.fullName || '').toLowerCase();
+                          const phone = u.phone || '';
+                          const queryText = searchQuery.toLowerCase();
+                          return name.includes(queryText) || phone.includes(searchQuery);
+                        })
                         .map((user) => (
                         <tr key={user.uid} className="hover:bg-white/[0.02] transition-colors group">
                           <td className="px-6 py-6">
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center font-black text-cyan-400">
-                                {user.fullName.charAt(0)}
+                                {(user.fullName || 'U').charAt(0)}
                               </div>
                               <div>
-                                <p className="font-bold text-lg">{user.fullName}</p>
-                                <p className="text-slate-500 text-sm font-medium">{user.phone}</p>
+                                <p className="font-bold text-lg">{user.fullName || 'Unnamed User'}</p>
+                                <p className="text-slate-500 text-sm font-medium">{user.phone || 'No phone'}</p>
                               </div>
                             </div>
                           </td>
@@ -814,10 +1020,10 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                     <h3 className="text-2xl font-bold">Manage Games</h3>
                   </div>
                   <button 
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenAddModal}
                     className="flex items-center gap-2 px-6 py-2.5 bg-purple-500 text-white font-bold rounded-xl hover:scale-105 transition-all"
                   >
-                    <Plus className="w-5 h-5" /> Add New Game
+                    <Plus className="w-5 h-5" /> Add New Content
                   </button>
                 </div>
 
@@ -842,9 +1048,9 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                   {localWorks.projects
                     .filter(game => {
                       if (contentClassTab === 'All') return true;
-                      if (contentClassTab === 'Class 1') return game.class === 'Class 1';
-                      if (contentClassTab === 'Class 2') return game.class === 'Class 2';
-                      if (contentClassTab === 'Class 3') return game.class === 'Class 3';
+                      if (contentClassTab === 'Class 1') return game.class === 'Class 1' || game.class === 'All Classes';
+                      if (contentClassTab === 'Class 2') return game.class === 'Class 2' || game.class === 'All Classes';
+                      if (contentClassTab === 'Class 3') return game.class === 'Class 3' || game.class === 'All Classes';
                       return true;
                     })
                     .map((game, i) => (
@@ -863,7 +1069,10 @@ export function AdminDashboard({ onLogout, isParentDashboard, parentData }: Admi
                         </div>
                       </div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <button className="p-3 hover:bg-white/10 rounded-xl text-cyan-400 transition-all">
+                        <button
+                          onClick={() => handleOpenEditModal(game)}
+                          className="p-3 hover:bg-white/10 rounded-xl text-cyan-400 transition-all"
+                        >
                           <Edit3 className="w-5 h-5" />
                         </button>
                         <button 

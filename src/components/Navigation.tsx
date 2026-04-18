@@ -9,13 +9,18 @@ import { auth, db } from '../firebase';
 
 gsap.registerPlugin(ScrollTrigger);
 
+import type { UserRole } from "./RoleSelection";
+
 interface NavigationProps {
   onLoginClick?: () => void;
   isGuestChild?: boolean;
   parentChildName?: string;
+  onSwitchRole?: () => void;
+  onOpenLearningHub?: () => void;
+  selectedRole?: UserRole | null;
 }
 
-export function Navigation({ onLoginClick, isGuestChild, parentChildName }: NavigationProps) {
+export function Navigation({ onLoginClick, isGuestChild: _isGuestChild, parentChildName, onSwitchRole, onOpenLearningHub, selectedRole }: NavigationProps) {
   const navRef = useRef<HTMLElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -69,6 +74,30 @@ export function Navigation({ onLoginClick, isGuestChild, parentChildName }: Navi
     }
   };
 
+  const childProfileName = guestName || parentChildName || localStorage.getItem('parentChildName') || null;
+  const isChildMode = selectedRole === 'child';
+  const profileLabel = isChildMode && childProfileName
+    ? `${childProfileName.split(' ')[0]}'s Profile`
+    : userName
+      ? `Welcome, ${userName.split(' ')[0]}`
+      : childProfileName
+        ? `${childProfileName.split(' ')[0]}'s Profile`
+        : 'Parent Access';
+
+  const handleProfileClick = () => {
+    if (isChildMode) {
+      const childProfilePanel = document.querySelector('#child-profile-panel');
+      if (childProfilePanel instanceof HTMLElement) {
+        childProfilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      setIsMobileMenuOpen(false);
+      return;
+    }
+
+    onLoginClick?.();
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <>
       <nav
@@ -102,29 +131,38 @@ export function Navigation({ onLoginClick, isGuestChild, parentChildName }: Navi
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-highlight group-hover:w-full transition-all duration-300" />
               </a>
             ))}
+
+            <button
+              onClick={() => {
+                onOpenLearningHub?.();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:brightness-110"
+            >
+              Child Hub
+            </button>
             
+            {selectedRole && (
+              <button
+                onClick={onSwitchRole}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm"
+              >
+                <UserIcon className="w-4 h-4 text-slate-400" />
+                <span>Switch Role</span>
+              </button>
+            )}
+
             {/* Login button / Welcome message */}
             <button
-              onClick={onLoginClick}
+              onClick={handleProfileClick}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg ${
-                userName || guestName
-                  ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm' 
-                  : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:brightness-110 shadow-cyan-500/25'
+                userName || childProfileName
+                  ? "bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm" 
+                  : "bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:brightness-110 shadow-cyan-500/25"
               }`}
             >
-              {userName ? (
-                <>
-                  <UserIcon className="w-4 h-4 text-cyan-400" />
-                  <span>Welcome, {userName.split(' ')[0]}</span>
-                </>
-              ) : guestName ? (
-                <>
-                  <UserIcon className="w-4 h-4 text-cyan-400" />
-                  <span>Welcome back, {guestName.split(' ')[0]}!</span>
-                </>
-              ) : (
-                'Login'
-              )}
+              <UserIcon className="w-4 h-4 text-cyan-400" />
+              <span>{profileLabel}</span>
             </button>
           </div>
 
@@ -146,8 +184,8 @@ export function Navigation({ onLoginClick, isGuestChild, parentChildName }: Navi
       <div
         className={`fixed inset-0 z-40 bg-black transition-all duration-500 lg:hidden ${
           isMobileMenuOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         <div className="flex flex-col items-center justify-center h-full gap-8">
@@ -159,8 +197,8 @@ export function Navigation({ onLoginClick, isGuestChild, parentChildName }: Navi
               className="text-h3 text-white hover:text-highlight transition-colors duration-300"
               style={{
                 transform: isMobileMenuOpen
-                  ? 'translateY(0)'
-                  : 'translateY(20px)',
+                  ? "translateY(0)"
+                  : "translateY(20px)",
                 opacity: isMobileMenuOpen ? 1 : 0,
                 transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.1}s`,
               }}
@@ -168,42 +206,67 @@ export function Navigation({ onLoginClick, isGuestChild, parentChildName }: Navi
               {item.label}
             </a>
           ))}
-          
-          {/* Mobile Login button / Welcome message */}
+
           <button
             onClick={() => {
-              onLoginClick?.();
+              onOpenLearningHub?.();
               setIsMobileMenuOpen(false);
             }}
-            className={`mt-4 flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 ${
-              userName || guestName
-                ? 'bg-white/10 text-white border border-white/20' 
-                : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-lg shadow-cyan-500/25'
-            }`}
+            className="mt-2 flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-lg shadow-cyan-500/25"
             style={{
               transform: isMobileMenuOpen
-                ? 'translateY(0)'
-                : 'translateY(20px)',
+                ? "translateY(0)"
+                : "translateY(20px)",
               opacity: isMobileMenuOpen ? 1 : 0,
               transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${navigationConfig.items.length * 0.1}s`,
             }}
           >
-            {userName ? (
-              <>
-                <UserIcon className="w-5 h-5 text-cyan-400" />
-                <span>Welcome, {userName.split(' ')[0]}</span>
-              </>
-            ) : guestName ? (
-              <>
-                <UserIcon className="w-5 h-5 text-cyan-400" />
-                <span>Welcome back, {guestName.split(' ')[0]}!</span>
-              </>
-            ) : (
-              'Login'
-            )}
+            Child Hub
+          </button>
+
+          {selectedRole && (
+            <button
+              onClick={() => {
+                onSwitchRole?.();
+                setIsMobileMenuOpen(false);
+              }}
+              className={`mt-4 flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 bg-white/10 text-white border border-white/20`}
+              style={{
+                transform: isMobileMenuOpen
+                  ? "translateY(0)"
+                  : "translateY(20px)",
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${navigationConfig.items.length * 0.1}s`,
+              }}
+            >
+              <UserIcon className="w-5 h-5 text-slate-400" />
+              <span>Switch Role</span>
+            </button>
+          )}
+          
+          {/* Mobile Login button / Welcome message */}
+          <button
+            onClick={handleProfileClick}
+            className={`mt-4 flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 ${
+              userName || childProfileName
+                ? "bg-white/10 text-white border border-white/20" 
+                : "bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-lg shadow-cyan-500/25"
+            }`}
+            style={{
+              transform: isMobileMenuOpen
+                ? "translateY(0)"
+                : "translateY(20px)",
+              opacity: isMobileMenuOpen ? 1 : 0,
+              transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${navigationConfig.items.length * 0.1}s`,
+            }}
+          >
+            <UserIcon className="w-5 h-5 text-cyan-400" />
+            <span>{profileLabel}</span>
           </button>
         </div>
       </div>
     </>
   );
 }
+
+

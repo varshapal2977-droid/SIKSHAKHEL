@@ -9,6 +9,8 @@ import {
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 
+const PARENT_SESSION_KEY = 'parentSessionStartedAt';
+
 interface ParentEmailLoginProps {
   onComplete: (user: FirebaseUser, parentData: ParentData) => void;
   onBack: () => void;
@@ -19,6 +21,9 @@ interface ParentData {
   email: string;
   childName: string;
   childClass: string;
+  childAge: string;
+  schoolName: string;
+  learningGoal: string;
 }
 
 export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) {
@@ -33,7 +38,10 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
     fullName: '',
     email: '',
     childName: '',
-    childClass: ''
+    childClass: '',
+    childAge: '',
+    schoolName: '',
+    learningGoal: 'Build daily learning habit'
   });
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -50,6 +58,7 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
       if (mode === 'login') {
         const result = await signInWithEmailAndPassword(auth, email, password);
         const user = result.user;
+        localStorage.setItem(PARENT_SESSION_KEY, Date.now().toString());
 
         // Fetch parent details
         const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -59,7 +68,10 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
             fullName: data.fullName || '',
             email: data.email || user.email || '',
             childName: data.childName || '',
-            childClass: data.childClass || ''
+            childClass: data.childClass || '',
+            childAge: data.childAge ? String(data.childAge) : '',
+            schoolName: data.schoolName || '',
+            learningGoal: data.learningGoal || 'Build daily learning habit'
           });
         } else {
           // Logged in but details missing? Go to details
@@ -69,6 +81,7 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
       } else {
         // Signup mode
         const result = await createUserWithEmailAndPassword(auth, email, password);
+        localStorage.setItem(PARENT_SESSION_KEY, Date.now().toString());
         setParentData(prev => ({ ...prev, email: result.user.email || email }));
         setMode('details');
       }
@@ -92,7 +105,7 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
     const user = auth.currentUser;
     if (!user) return;
 
-    if (!parentData.fullName || !parentData.childName) {
+    if (!parentData.fullName || !parentData.childName || !parentData.childClass || !parentData.childAge) {
       setError('Please fill in all required fields');
       return;
     }
@@ -107,6 +120,9 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
         email: parentData.email,
         childName: parentData.childName,
         childClass: parentData.childClass,
+        childAge: Number(parentData.childAge) || null,
+        schoolName: parentData.schoolName,
+        learningGoal: parentData.learningGoal,
         role: 'parent',
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
@@ -117,6 +133,9 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
         parentId: user.uid,
         name: parentData.childName,
         grade: parentData.childClass || 'Class 1',
+        age: Number(parentData.childAge) || null,
+        schoolName: parentData.schoolName,
+        learningGoal: parentData.learningGoal,
         progress: 0,
         streak: 0,
         lastActive: new Date().toISOString(),
@@ -126,6 +145,9 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
       // Local persistence for auto-login
       localStorage.setItem('parentChildName', parentData.childName);
       localStorage.setItem('parentChildClass', parentData.childClass);
+      localStorage.setItem('parentChildAge', parentData.childAge);
+      localStorage.setItem('parentSchoolName', parentData.schoolName);
+      localStorage.setItem('parentLearningGoal', parentData.learningGoal);
       localStorage.setItem('childHasVisited', 'true');
 
       onComplete(user, parentData);
@@ -254,7 +276,7 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-1">Child's Class</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-1">Child's Class *</label>
                   <select
                     value={parentData.childClass}
                     onChange={(e) => setParentData({...parentData, childClass: e.target.value})}
@@ -266,11 +288,49 @@ export function ParentEmailLogin({ onComplete, onBack }: ParentEmailLoginProps) 
                     <option value="Class 3" className="bg-slate-900">Class 3</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-1">Child's Age *</label>
+                  <input
+                    type="number"
+                    min="3"
+                    max="12"
+                    placeholder="Child age"
+                    value={parentData.childAge}
+                    onChange={(e) => setParentData({...parentData, childAge: e.target.value})}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-all focus:border-purple-400/50 focus:bg-white/10 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-1">School Name</label>
+                  <input
+                    type="text"
+                    placeholder="Optional school name"
+                    value={parentData.schoolName}
+                    onChange={(e) => setParentData({...parentData, schoolName: e.target.value})}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-all focus:border-purple-400/50 focus:bg-white/10 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-1">Learning Goal</label>
+                  <select
+                    value={parentData.learningGoal}
+                    onChange={(e) => setParentData({...parentData, learningGoal: e.target.value})}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white outline-none transition-all focus:border-purple-400/50 focus:bg-white/10"
+                  >
+                    <option value="Build daily learning habit" className="bg-slate-900">Build daily learning habit</option>
+                    <option value="Improve Maths confidence" className="bg-slate-900">Improve Maths confidence</option>
+                    <option value="Improve EVS understanding" className="bg-slate-900">Improve EVS understanding</option>
+                    <option value="Strengthen reading skills" className="bg-slate-900">Strengthen reading skills</option>
+                  </select>
+                </div>
               </div>
 
               <button
                 onClick={handleSaveDetails}
-                disabled={loading || !parentData.fullName || !parentData.childName}
+                disabled={loading || !parentData.fullName || !parentData.childName || !parentData.childClass || !parentData.childAge}
                 className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-4 font-bold text-black shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] hover:brightness-110 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Complete Setup'}

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Lock, ArrowRight, Loader2, User, Baby, Users } from 'lucide-react';
+import { Phone, Lock, ArrowRight, Loader2, Users } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import type { ConfirmationResult, User as FirebaseUser } from 'firebase/auth';
 
 interface ParentPhoneLoginProps {
@@ -29,7 +29,6 @@ export function ParentPhoneLogin({ onComplete, onBack }: ParentPhoneLoginProps) 
   const [step, setStep] = useState<'phone' | 'otp' | 'details'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [parentData, setParentData] = useState<ParentData>({
@@ -81,7 +80,6 @@ export function ParentPhoneLogin({ onComplete, onBack }: ParentPhoneLoginProps) 
       );
 
       window.confirmationResult = confirmationResult;
-      setOtpSent(true);
       setStep('otp');
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP');
@@ -263,7 +261,6 @@ export function ParentPhoneLogin({ onComplete, onBack }: ParentPhoneLoginProps) 
 
               <button
                 onClick={() => {
-                  setOtpSent(false);
                   setStep('phone');
                   setOtp('');
                   setError('');

@@ -1053,8 +1053,48 @@ function showResult(){
   document.getElementById('resultStreak').textContent='🔥 '+streak+' Day Streak!';
   if(pct===1) burstMini(true);
   speak(msg+'. Your score is '+score+' out of '+qs.length+'.');
+  queueChildActivity({
+    type:'game_result',
+    title:(subj||'General')+' Quiz - Level '+lvl,
+    subject:subj||'General',
+    minutes:Math.max(1,Math.round((Date.now()-gameSession.startedAt)/60000)),
+    starsEarned:stars,
+    questionsSolved:score,
+    score:score,
+    totalQuestions:qs.length,
+    progressDelta:Math.round(pct*12),
+    lessonsCompletedDelta:1,
+    badgeDelta:stars===3?1:0,
+    source:'gamesss.html',
+    timestamp:new Date().toISOString()
+  });
   showScreen('result');
 }
+
+/* TRACK PARENT DASHBOARD ACTIVITY */
+const SHIKSHA_PENDING_KEY='shikshakhel.pendingChildActivityLogs';
+const gameSession={startedAt:Date.now()};
+function queueChildActivity(activity){
+  try{
+    const existing=JSON.parse(localStorage.getItem(SHIKSHA_PENDING_KEY)||'[]');
+    existing.push(activity);
+    localStorage.setItem(SHIKSHA_PENDING_KEY,JSON.stringify(existing));
+  }catch(e){
+    localStorage.setItem(SHIKSHA_PENDING_KEY,JSON.stringify([activity]));
+  }
+}
+window.addEventListener('pagehide',()=>{
+  const durationMinutes=Math.max(1,Math.round((Date.now()-gameSession.startedAt)/60000));
+  queueChildActivity({
+    type:'study_session',
+    title:(subj||'General')+' Practice Session',
+    subject:subj||'General',
+    minutes:durationMinutes,
+    progressDelta:Math.max(1,Math.round(durationMinutes/2)),
+    source:'gamesss.html',
+    timestamp:new Date().toISOString()
+  });
+});
 </script>
 </body>
 </html>

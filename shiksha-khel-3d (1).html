@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Shiksha Khel – Granny's House 3D</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,400;1,600&family=Nunito:wght@700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fdf6e3;
+      --warm: #f0dfc0;
+      --amber: #c8820a;
+      --amber-lt: #f5b942;
+      --brown: #2e1505;
+      --brown-mid: #7a4520;
+      --rose: #b04040;
+      --sage: #4a7042;
+      --sage-lt: #7aaa60;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    #c {
+      display: block;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+    }
+
+    .screen {
+      display: none;
+      position: absolute;
+      inset: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* HOME */
+    #home {
+      background: radial-gradient(ellipse at 50% 30%, #1a0e02 0%, #050200 100%);
+    }
+
+    .hbox {
+      max-width: 400px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 13px;
+      padding: 26px 18px;
+    }
+
+    .htitle {
+      font-family: 'Lora', serif;
+      font-size: 2.3rem;
+      font-weight: 700;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #f5b942, #c8820a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px rgba(200, 130, 10, .5));
+    }
+
+    .hsub {
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #7a4520;
+      text-align: center;
+    }
+
+    .story {
+      background: rgba(253, 246, 227, .07);
+      border: 1.5px solid rgba(200, 130, 10, .3);
+      border-radius: 14px;
+      padding: 13px 15px;
+      font-size: .83rem;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.65;
+      text-align: center;
+    }
+
+    .story strong {
+      color: var(--amber-lt);
+    }
+
+    .ctrl-box {
+      background: rgba(0, 0, 0, .45);
+      border: 1.5px solid rgba(200, 130, 10, .25);
+      border-radius: 12px;
+      padding: 11px 14px;
+      width: 100%;
+      font-size: .77rem;
+      font-weight: 700;
+      color: #c8a060;
+      line-height: 1.75;
+      text-align: center;
+    }
+
+    .kc {
+      display: inline-block;
+      background: rgba(255, 255, 255, .13);
+      border: 1.5px solid rgba(255, 255, 255, .35);
+      border-radius: 5px;
+      padding: 1px 7px;
+      font-family: monospace;
+      font-size: .73rem;
+      color: white;
+      margin: 0 2px;
+    }
+
+    .sel-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .sb {
+      flex: 1;
+      padding: 11px 6px;
+      border-radius: 11px;
+      border: 2px solid rgba(200, 130, 10, .3);
+      background: rgba(253, 246, 227, .05);
+      color: var(--cream);
+      font-family: 'Lora', serif;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+    }
+
+    .sb.on,
+    .sb:hover {
+      border-color: var(--amber-lt);
+      background: rgba(200, 130, 10, .22);
+      box-shadow: 0 0 18px rgba(200, 130, 10, .3);
+    }
+
+    .sgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .playbtn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      font-style: italic;
+      background: linear-gradient(135deg, #c8820a, #7a4520);
+      color: var(--cream);
+      box-shadow: 0 8px 30px rgba(200, 130, 10, .5);
+      transition: all .2s;
+    }
+
+    .playbtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(200, 130, 10, .6);
+    }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      display: none;
+    }
+
+    .htl {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .htr {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .hpill {
+      background: rgba(0, 0, 0, .65);
+      border: 1.5px solid rgba(200, 130, 10, .4);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--cream);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+
+    .hpill.sc {
+      color: var(--amber-lt);
+    }
+
+    .hpill.rm {
+      font-family: 'Lora', serif;
+      font-style: italic;
+    }
+
+    .awwrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0, 0, 0, .65);
+      border: 1.5px solid rgba(200, 130, 10, .35);
+      border-radius: 20px;
+      padding: 6px 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    .awface {
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    .awcol {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .awlbl {
+      font-size: .53rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(200, 130, 10, .8);
+    }
+
+    .awtrack {
+      width: 80px;
+      height: 7px;
+      background: rgba(255, 255, 255, .12);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .awfill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #4a7042, #d4a017, #b04040);
+      transition: width .5s;
+    }
+
+    .krow {
+      display: flex;
+      gap: 5px;
+      background: rgba(0, 0, 0, .65);
+      border: 1.5px solid rgba(200, 130, 10, .35);
+      border-radius: 20px;
+      padding: 6px 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    .kslot {
+      font-size: 1.1rem;
+      opacity: .22;
+      transition: all .3s;
+    }
+
+    .kslot.got {
+      opacity: 1;
+      animation: kpop .4s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    @keyframes kpop {
+      from {
+        transform: scale(0)rotate(-20deg);
+      }
+
+      to {
+        transform: scale(1)rotate(0);
+      }
+    }
+
+    /* Interact prompt */
+    #iprompt {
+      position: absolute;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%)translateY(18px);
+      background: rgba(0, 0, 0, .8);
+      border: 2px solid var(--amber-lt);
+      border-radius: 18px;
+      padding: 9px 22px;
+      font-size: .83rem;
+      font-weight: 800;
+      color: var(--cream);
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      white-space: nowrap;
+      box-shadow: 0 0 28px rgba(200, 130, 10, .35);
+    }
+
+    #iprompt.show {
+      opacity: 1;
+      transform: translateX(-50%)translateY(0);
+    }
+
+    /* Crosshair */
+    #xhair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
+
+    #xhair::before,
+    #xhair::after {
+      content: '';
+      position: absolute;
+      background: rgba(245, 185, 66, .7);
+      border-radius: 2px;
+    }
+
+    #xhair::before {
+      width: 2px;
+      height: 20px;
+      left: 9px;
+      top: 0;
+    }
+
+    #xhair::after {
+      width: 20px;
+      height: 2px;
+      top: 9px;
+      left: 0;
+    }
+
+    /* Mobile dpad */
+    #mctrl {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: none;
+      pointer-events: none;
+    }
+
+    @media(pointer:coarse) {
+      #mctrl {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0 14px;
+      }
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(2, 46px);
+      gap: 4px;
+      pointer-events: all;
+    }
+
+    .dp {
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .55);
+      border: 1.5px solid rgba(200, 130, 10, .4);
+      color: var(--cream);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      touch-action: none;
+    }
+
+    .dp:active {
+      background: rgba(200, 130, 10, .4);
+    }
+
+    .dup {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .dlf {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .ddn {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .drt {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .abtns {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: all;
+    }
+
+    .abtn {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, .55);
+      border: 1.5px solid rgba(200, 130, 10, .4);
+      color: var(--cream);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      gap: 1px;
+      touch-action: none;
+    }
+
+    .abtn span:last-child {
+      font-size: .42rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: rgba(253, 246, 227, .7);
+    }
+
+    .abtn:active {
+      background: rgba(200, 130, 10, .4);
+    }
+
+    /* Minimap */
+    #mmap {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      width: 110px;
+      height: 110px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, .7);
+      border: 1.5px solid rgba(200, 130, 10, .4);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* PUZZLE MODAL */
+    #pmodal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0, 0, 0, .75);
+      backdrop-filter: blur(6px);
+    }
+
+    #pmodal.open {
+      display: flex;
+    }
+
+    .psheet {
+      background: var(--cream);
+      border-radius: 28px 28px 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding-bottom: 24px;
+      box-shadow: 0 -16px 60px rgba(0, 0, 0, .8);
+      animation: sup .38s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    @keyframes sup {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .phdl {
+      width: 44px;
+      height: 5px;
+      background: #c8a050;
+      border-radius: 3px;
+      margin: 12px auto 0;
+    }
+
+    .phead {
+      padding: 14px 18px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px dashed rgba(181, 113, 42, .3);
+    }
+
+    .picon {
+      font-size: 2.6rem;
+      flex-shrink: 0;
+    }
+
+    .pnm {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--brown);
+    }
+
+    .psb {
+      font-size: .72rem;
+      color: var(--brown-mid);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .pcls {
+      margin-left: auto;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--brown-mid);
+      padding: 4px;
+      pointer-events: all;
+    }
+
+    .pbody {
+      padding: 14px 18px;
+    }
+
+    .pgm {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(176, 64, 64, .08);
+      border: 1.5px solid rgba(176, 64, 64, .3);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+    }
+
+    .pgm .gf {
+      font-size: 1.6rem;
+    }
+
+    .pgm .gm {
+      font-size: .74rem;
+      font-weight: 700;
+      color: var(--rose);
+    }
+
+    .pbadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .62rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      background: rgba(181, 113, 42, .15);
+      border: 1.5px solid rgba(181, 113, 42, .4);
+      color: var(--amber);
+    }
+
+    .pq {
+      font-family: 'Lora', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--brown);
+      line-height: 1.4;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .pvis {
+      font-size: 1.9rem;
+      text-align: center;
+      margin: 8px 0;
+      letter-spacing: 5px;
+      min-height: 28px;
+    }
+
+    .phnt {
+      font-size: .73rem;
+      color: var(--brown-mid);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      padding: 10px 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: .98rem;
+      font-weight: 700;
+      background: var(--warm);
+      border: 2px solid rgba(181, 113, 42, .4);
+      color: var(--brown);
+      transition: all .18s;
+      animation: cin .35s cubic-bezier(.34, 1.56, .64, 1) both;
+      animation-delay: var(--cd, 0s);
+    }
+
+    @keyframes cin {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .chip:hover {
+      border-color: var(--amber);
+      background: rgba(200, 130, 10, .15);
+      transform: translateY(-2px);
+    }
+
+    .chip.on {
+      background: rgba(200, 130, 10, .25);
+      border-color: var(--amber);
+    }
+
+    .chip.matched {
+      opacity: .4;
+      pointer-events: none;
+      border-color: var(--sage);
+    }
+
+    .chip.bad {
+      border-color: var(--rose);
+      animation: shk .3s ease;
+    }
+
+    @keyframes shk {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    .tray {
+      min-height: 46px;
+      border: 2px dashed rgba(181, 113, 42, .4);
+      border-radius: 12px;
+      padding: 8px;
+      background: rgba(240, 191, 120, .15);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .trayph {
+      font-size: .7rem;
+      color: var(--brown-mid);
+      font-weight: 700;
+      font-style: italic;
+    }
+
+    .fsent {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--brown);
+      text-align: center;
+      line-height: 2.2;
+      margin-bottom: 8px;
+    }
+
+    .blank {
+      display: inline-block;
+      min-width: 70px;
+      border-bottom: 3px solid var(--amber);
+      color: var(--amber);
+      padding: 0 6px;
+      text-align: center;
+      font-style: italic;
+      font-weight: 700;
+      transition: all .2s;
+    }
+
+    .blank.ok {
+      color: var(--sage);
+      border-color: var(--sage);
+    }
+
+    .blank.bad {
+      color: var(--rose);
+      border-color: var(--rose);
+    }
+
+    .mcols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .mcol {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cobjs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      padding: 8px 0 12px;
+    }
+
+    .cobj {
+      font-size: 2.2rem;
+      cursor: pointer;
+      transition: transform .15s;
+      animation: bob 2.5s ease-in-out infinite;
+      animation-delay: var(--cd, 0s);
+    }
+
+    @keyframes bob {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .cobj:hover {
+      transform: scale(1.2);
+    }
+
+    .cobj.tapped {
+      opacity: .25;
+      filter: grayscale(1);
+      animation: none;
+      transform: scale(.7);
+    }
+
+    .cn {
+      font-family: 'Lora', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--amber);
+      text-align: center;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .psub {
+      width: 100%;
+      padding: 14px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-style: italic;
+      background: linear-gradient(135deg, var(--amber), var(--brown-mid));
+      color: white;
+      box-shadow: 0 6px 20px rgba(200, 130, 10, .4);
+      transition: all .2s;
+      margin-top: 2px;
+    }
+
+    .psub:hover {
+      transform: translateY(-2px);
+    }
+
+    .pfb {
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-top: 10px;
+      font-family: 'Lora', serif;
+      font-size: .95rem;
+      font-weight: 700;
+      font-style: italic;
+      text-align: center;
+      opacity: 0;
+      transform: scale(.9);
+      transition: all .28s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .pfb.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .pfb.ok {
+      background: rgba(74, 112, 66, .12);
+      border: 2px solid var(--sage);
+      color: var(--sage);
+    }
+
+    .pfb.no {
+      background: rgba(176, 64, 64, .1);
+      border: 2px solid var(--rose);
+      color: var(--rose);
+    }
+
+    /* CAUGHT */
+    #cmod {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(176, 64, 64, .8);
+      backdrop-filter: blur(8px);
+    }
+
+    #cmod.open {
+      display: flex;
+      animation: fi .3s ease;
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .cbox {
+      background: var(--cream);
+      border-radius: 28px;
+      padding: 32px 24px 24px;
+      text-align: center;
+      max-width: 320px;
+      width: 90%;
+      box-shadow: 0 16px 64px rgba(0, 0, 0, .7);
+      animation: pb .4s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    @keyframes pb {
+      from {
+        transform: scale(.5)rotate(-8deg);
+      }
+
+      to {
+        transform: scale(1)rotate(0);
+      }
+    }
+
+    .cface {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .ctitle {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--rose);
+      margin-bottom: 8px;
+    }
+
+    .cmsg {
+      font-size: .84rem;
+      color: var(--brown-mid);
+      font-weight: 700;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .cbtn {
+      padding: 12px 28px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      font-style: italic;
+      background: linear-gradient(135deg, var(--rose), #d07070);
+      color: white;
+      box-shadow: 0 6px 20px rgba(176, 64, 64, .4);
+      transition: all .2s;
+    }
+
+    .cbtn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* VICTORY */
+    #vmod {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(74, 112, 66, .85), rgba(200, 130, 10, .75));
+      backdrop-filter: blur(8px);
+    }
+
+    #vmod.open {
+      display: flex;
+      animation: fi .4s ease;
+    }
+
+    .vbox {
+      background: var(--cream);
+      border-radius: 28px;
+      padding: 36px 24px 28px;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 16px 64px rgba(0, 0, 0, .7);
+      animation: pb .5s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .vem {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: vb 1.5s ease-in-out infinite;
+    }
+
+    @keyframes vb {
+
+      0%,
+      100% {
+        transform: rotate(-6deg)translateY(0);
+      }
+
+      50% {
+        transform: rotate(6deg)translateY(-14px);
+      }
+    }
+
+    .vtitle {
+      font-family: 'Lora', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-style: italic;
+      color: var(--amber);
+      margin-bottom: 4px;
+    }
+
+    .vsc {
+      font-family: 'Lora', serif;
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: var(--brown);
+    }
+
+    .vst {
+      font-size: 2rem;
+      letter-spacing: 8px;
+      margin: 4px 0 6px;
+    }
+
+    .vmsg {
+      font-size: .84rem;
+      color: var(--brown-mid);
+      font-weight: 700;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .vbtns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .vbtn {
+      padding: 12px 22px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: .9rem;
+      font-weight: 700;
+      font-style: italic;
+      color: white;
+      transition: all .2s;
+    }
+
+    .vbtn:hover {
+      transform: translateY(-2px);
+    }
+
+    .va {
+      background: linear-gradient(135deg, var(--amber), var(--brown-mid));
+      box-shadow: 0 6px 20px rgba(200, 130, 10, .4);
+    }
+
+    .vh {
+      background: linear-gradient(135deg, var(--sage), var(--sage-lt));
+      box-shadow: 0 6px 20px rgba(74, 112, 66, .4);
+    }
+
+    /* confetti toast audio */
+    #cw {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 55;
+      overflow: hidden;
+    }
+
+    .cp {
+      position: absolute;
+      border-radius: 2px;
+      animation: cf linear forwards;
+    }
+
+    @keyframes cf {
+      0% {
+        transform: translateY(-10px)rotate(0);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(110vh)rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    #toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%)translateY(-10px);
+      background: rgba(10, 5, 0, .92);
+      color: var(--cream);
+      border: 1.5px solid var(--amber);
+      border-radius: 18px;
+      padding: 9px 22px;
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      z-index: 80;
+      opacity: 0;
+      transition: all .3s;
+      white-space: nowrap;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%)translateY(0);
+    }
+
+    .afab {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      z-index: 90;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .6);
+      border: 1.5px solid rgba(200, 130, 10, .45);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      color: var(--cream);
+      transition: all .2s;
+    }
+
+    .afab:hover {
+      background: rgba(200, 130, 10, .3);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- HOME -->
+  <div class="screen active" id="home">
+    <div class="hbox">
+      <div class="htitle">Shiksha Khel<br><small style="font-size:.58em;font-style:normal;letter-spacing:.04em">Granny's
+          House — 3D</small></div>
+      <div class="hsub">NCERT · Class 1–3 · Escape Adventure</div>
+      <div class="story">You're <strong>locked inside Granny's house</strong> 🌙<br>Explore 3D rooms, find
+        <strong>glowing objects</strong>,<br>solve <strong>NCERT puzzles</strong> to collect <strong>4
+          keys</strong>,<br>then <strong>escape through the front door</strong>!</div>
+      <div class="ctrl-box">
+        <b>Move:</b> <span class="kc">W</span><span class="kc">A</span><span class="kc">S</span><span
+          class="kc">D</span> or Arrows &nbsp;|&nbsp; <b>Look:</b> Mouse drag<br>
+        <b>Interact:</b> <span class="kc">E</span> or <span class="kc">Space</span> &nbsp;|&nbsp; <b>Sprint:</b> <span
+          class="kc">Shift</span><br>
+        <b>3rd-person cam:</b> stays behind character, never clips walls
+      </div>
+      <div style="width:100%">
+        <div
+          style="font-size:.67rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#7a4520;margin-bottom:7px;">
+          Class</div>
+        <div class="sel-row" id="clsRow">
+          <button class="sb on" onclick="setCls(1,this)">Class 1</button>
+          <button class="sb" onclick="setCls(2,this)">Class 2</button>
+          <button class="sb" onclick="setCls(3,this)">Class 3</button>
+        </div>
+      </div>
+      <div style="width:100%">
+        <div
+          style="font-size:.67rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#7a4520;margin-bottom:7px;">
+          Subject</div>
+        <div class="sgrid">
+          <button class="sb on" onclick="setSubj('math',this)">🔢 Maths</button>
+          <button class="sb" onclick="setSubj('evs',this)">🌿 EVS</button>
+          <button class="sb" onclick="setSubj('eng',this)">✏️ English</button>
+        </div>
+      </div>
+      <button class="playbtn" onclick="startGame()">Enter the House →</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="htl">
+      <div class="hpill rm" id="hudRoom">🍵 Kitchen</div>
+      <div class="awwrap">
+        <span class="awface" id="awFace">😴</span>
+        <div class="awcol">
+          <div class="awlbl">Granny</div>
+          <div class="awtrack">
+            <div class="awfill" id="awFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="htr">
+      <div class="hpill sc">⭐ <span id="scDisp">0</span> pts</div>
+      <div class="krow"><span class="kslot" id="k0">🗝️</span><span class="kslot" id="k1">🗝️</span><span class="kslot"
+          id="k2">🗝️</span><span class="kslot" id="k3">🗝️</span></div>
+    </div>
+    <div id="iprompt"></div>
+    <div id="xhair"></div>
+    <!-- minimap canvas -->
+    <div id="mmap"><canvas id="mmC" width="110" height="110"></canvas></div>
+    <!-- Mobile -->
+    <div id="mctrl">
+      <div class="dpad">
+        <div class="dp dup" ontouchstart="mk2.f=1" ontouchend="mk2.f=0">↑</div>
+        <div class="dp dlf" ontouchstart="mk2.l=1" ontouchend="mk2.l=0">←</div>
+        <div class="dp ddn" ontouchstart="mk2.b=1" ontouchend="mk2.b=0">↓</div>
+        <div class="dp drt" ontouchstart="mk2.r=1" ontouchend="mk2.r=0">→</div>
+      </div>
+      <div class="abtns">
+        <div class="abtn" ontouchstart="tryInteract()"><span>👆</span><span>Use</span></div>
+        <div class="abtn" ontouchstart="mk2.sp=1" ontouchend="mk2.sp=0"><span>💨</span><span>Run</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Puzzle modal -->
+  <div id="pmodal">
+    <div class="psheet" id="pSheet">
+      <div class="phdl"></div>
+      <div class="phead"><span class="picon" id="pIco">📦</span>
+        <div>
+          <div class="pnm" id="pNm">Object</div>
+          <div class="psb" id="pSb"></div>
+        </div><span class="pcls" onclick="closePuzzle()">✕</span>
+      </div>
+      <div class="pbody" id="pBody"></div>
+    </div>
+  </div>
+
+  <!-- Caught -->
+  <div id="cmod">
+    <div class="cbox">
+      <span class="cface">👵</span>
+      <div class="ctitle">"Oh dearie me!"</div>
+      <div class="cmsg" id="cMsg">Granny woke up! Back to the kitchen, love!</div>
+      <button class="cbtn" onclick="dismissCaught()">Sorry Granny! 🙏</button>
+    </div>
+  </div>
+
+  <!-- Victory -->
+  <div id="vmod">
+    <div class="vbox">
+      <span class="vem">🎉</span>
+      <div class="vtitle">You Escaped!</div>
+      <div class="vsc" id="vSc">0 pts</div>
+      <div class="vst" id="vSt">⭐⭐⭐</div>
+      <div class="vmsg" id="vMsg">Brilliant!</div>
+      <div class="vbtns"><button class="vbtn va" onclick="restartGame()">Play Again</button><button class="vbtn vh"
+          onclick="goHome()">Home 🏠</button></div>
+    </div>
+  </div>
+
+  <div id="cw"></div>
+  <div id="toast"></div>
+  <button class="afab" id="afab" onclick="toggleAudio()">🔊</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    /* ═══════════ AUDIO ═══════════ */
+    let aOn = true;
+    function toggleAudio() { aOn = !aOn; document.getElementById('afab').textContent = aOn ? '🔊' : '🔇'; if (!aOn) speechSynthesis.cancel(); }
+    function speak(t, d = 0) { if (!aOn || !t) return; speechSynthesis.cancel(); const go = () => { const u = new SpeechSynthesisUtterance(t); const vs = speechSynthesis.getVoices(); const v = vs.find(x => x.lang === 'en-GB') || vs.find(x => x.lang.startsWith('en')) || null; if (v) u.voice = v; u.lang = 'en-GB'; u.rate = .9; u.pitch = 1.15; speechSynthesis.speak(u); }; d ? setTimeout(go, d) : go(); }
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    function beep(f, d, t = 'sine') { try { const c = new (AudioContext || webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.type = t; o.frequency.value = f; g.gain.setValueAtTime(.1, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + d); o.start(); o.stop(c.currentTime + d); } catch (e) { } }
+
+    /* ═══════════ HELPERS ═══════════ */
+    function createWoodTexture(colorStr) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d'); ctx.fillStyle = colorStr; ctx.fillRect(0,0,256,256);
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      for(let i=0; i<1000; i++) ctx.fillRect(Math.random()*256, Math.random()*256, Math.random()*20+10, 1.5);
+      const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 2); return tex;
+    }
+    function createGridTexture(colorStr) {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+      const ctx = c.getContext('2d'); ctx.fillStyle = colorStr; ctx.fillRect(0,0,128,128);
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      for(let i=0; i<128; i+=16) { ctx.fillRect(i, 0, 1, 128); ctx.fillRect(0, i, 128, 1); }
+      const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(4, 4); return tex;
+    }
+    let tT;
+    function toast(m, d = 2500) { const t = document.getElementById('toast'); clearTimeout(tT); t.textContent = m; t.classList.add('show'); tT = setTimeout(() => t.classList.remove('show'), d); }
+    function confetti(full = false) { const w = document.getElementById('cw'); const cols = ['#c8820a', '#f5b942', '#4a7042', '#7aaa60', '#b04040', '#fdf6e3']; const n = full ? 80 : 20; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'cp'; const s = full ? (7 + Math.random() * 11) : (5 + Math.random() * 7); d.style.cssText = `left:${full ? Math.random() * 100 : 30 + Math.random() * 40}%;background:${cols[i % cols.length]};animation-duration:${.8 + Math.random() * 1.1}s;animation-delay:${Math.random() * (full ? .5 : .15)}s;width:${s}px;height:${s}px;border-radius:${Math.random() > .5 ? '50%' : '3px'};`; w.appendChild(d); } setTimeout(() => [...w.children].slice(-n).forEach(c => c.remove()), full ? 3500 : 1800); }
+    function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
+    function se(n) { return n === 3 ? '⭐⭐⭐' : n === 2 ? '⭐⭐' : n === 1 ? '⭐' : '☆☆☆'; }
+
+    /* ═══════════ HOME ═══════════ */
+    let selCls = 1, selSubj = 'math';
+    function setCls(n, b) { selCls = n; document.querySelectorAll('#clsRow .sb').forEach(x => x.classList.remove('on')); b.classList.add('on'); }
+    function setSubj(s, b) { selSubj = s; document.querySelectorAll('.sgrid .sb').forEach(x => x.classList.remove('on')); b.classList.add('on'); }
+
+    /* ═══════════ PUZZLE BANK ═══════════ */
+    function getPuzzles(subj, cls) {
+      const banks = {
+        math: {
+          1: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'count', badge: '👆 Count & Tap', q: 'Tap every biscuit to count them all!', items: ['🍪', '🍪', '🍪', '🍪', '🍪', '🍪'], answer: 6, hint: "Tap each one carefully!" },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🕰️ Time Problem', q: "Granny wakes at 7, bakes 2 hours. When does she finish?", visual: '🕰️', sentence: 'She finishes at __ o\'clock.', blank: '9', options: ['8', '9', '10', '11'], hint: '7 plus 2 equals…?' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 Put in Order', q: 'Order these baking steps correctly!', items: ['Put in oven', 'Mix flour & eggs', 'Take out & cool', 'Get bowl ready'], answer: ['Get bowl ready', 'Mix flour & eggs', 'Put in oven', 'Take out & cool'], hint: 'What do you do FIRST?' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'sort', badge: '📂 Sort Numbers', q: 'Tap in order SMALLEST to BIGGEST!', items: ['7', '2', '15', '4', '10'], answer: ['2', '4', '7', '10', '15'], hint: 'Which is the smallest number?' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'fill', badge: '🖊️ Solve It', q: 'Granny has 10 biscuits and eats 3. How many remain?', visual: '🍪🍪🍪🍪🍪🍪🍪', sentence: 'She has __ biscuits left.', blank: '7', options: ['5', '6', '7', '8'], hint: '10 take away 3 is…?' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'match', badge: '🔗 Match Pairs', q: 'Match the number to the group of objects!', pairs: [{ left: '3', right: '🍎🍎🍎' }, { left: '5', right: '⭐⭐⭐⭐⭐' }, { left: '2', right: '🏀🏀' }, { left: '4', right: '🌸🌸🌸🌸' }], hint: 'Count the objects carefully!' },
+          ],
+          2: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'fill', badge: '✖️ Multiply', q: '4 rows of 5 biscuits. Total biscuits?', visual: '🍪×5 rows×4', sentence: 'There are __ biscuits.', blank: '20', options: ['15', '18', '20', '25'], hint: '4 times 5 equals…?' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🕰️ Quarter Past', q: 'Quarter past 3 in digits?', visual: '🕰️', sentence: 'It is 3 : __ PM.', blank: '15', options: ['05', '10', '15', '30'], hint: 'Quarter past = 15 minutes!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sort', badge: '📂 Sort Values', q: 'Tap in order SMALLEST to BIGGEST!', items: ['25', '8', '43', '16', '31'], answer: ['8', '16', '25', '31', '43'], hint: 'Look at the tens digit first!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'fill', badge: '🖊️ Word Problem', q: '48 books. Granny borrows 17. How many remain?', visual: '📚', sentence: '__ books remain.', blank: '31', options: ['29', '30', '31', '32'], hint: '48 take away 17!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'count', badge: '👆 Odd Numbers', q: 'Tap ONLY the odd numbers!', items: ['4', '7', '12', '5', '8', '3', '6', '1'], answer: 4, filterCheck: x => +x % 2 !== 0, hint: '1,3,5,7,9 are odd!' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'match', badge: '🔗 Match Sums', q: 'Match each sum to its answer!', pairs: [{ left: '6×3', right: '18' }, { left: '4×5', right: '20' }, { left: '7×2', right: '14' }, { left: '9×3', right: '27' }], hint: 'Use your times tables!' },
+          ],
+          3: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'fill', badge: '➗ Division', q: '56 biscuits among 7 children. Each child gets?', visual: '🍪÷👦', sentence: 'Each child gets __ biscuits.', blank: '8', options: ['6', '7', '8', '9'], hint: '56÷7 — think times tables!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🕰️ Elapsed Time', q: 'Start 11:45, cook 2h 30m. Finish time?', visual: '⏱️', sentence: 'She finishes at __ PM.', blank: '2:15', options: ['1:45', '2:00', '2:15', '2:30'], hint: '11:45+2h=1:45, add 30m!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sort', badge: '📂 Sort Decimals', q: 'Sort measurements SMALLEST to LARGEST!', items: ['1.5kg', '0.8kg', '2.1kg', '1.0kg', '0.3kg'], answer: ['0.3kg', '0.8kg', '1.0kg', '1.5kg', '2.1kg'], hint: 'Check the decimal part!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'fill', badge: '📐 Area', q: 'Rug: 6m long, 4m wide. Area?', visual: '📏 6m×4m', sentence: 'Area = __ sq m.', blank: '24', options: ['20', '22', '24', '26'], hint: 'Length × Width = Area!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'count', badge: '👆 Prime Numbers', q: 'Tap ONLY the prime numbers!', items: ['2', '4', '3', '9', '7', '6', '5', '11'], answer: 5, filterCheck: x => [2, 3, 5, 7, 11].includes(+x), hint: 'Primes: 2,3,5,7,11…' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'fill', badge: '📐 Missing Angle', q: 'Triangle: 60°+70°+?=180°. Missing angle?', visual: '△', sentence: 'The angle is __ degrees.', blank: '50', options: ['40', '45', '50', '55'], hint: 'Angles add to 180°!' },
+          ]
+        },
+        evs: {
+          1: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'sort', badge: '📂 Living/Non-Living', q: 'Sort into Living and Non-Living things!', bins: ['🌱 Living', '🪨 Non-Living'], items: ['🌱 Plant', '🪨 Rock', '🐜 Ant', '🥄 Spoon', '🍄 Mushroom', '🫙 Jar'], answer: { '🌱 Living': ['🌱 Plant', '🐜 Ant', '🍄 Mushroom'], '🪨 Non-Living': ['🪨 Rock', '🥄 Spoon', '🫙 Jar'] }, hint: 'Living things breathe and grow!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🌤️ Seasons', q: 'In which season do flowers bloom?', visual: '🌸🦋', sentence: 'Flowers bloom in __.', blank: 'Spring', options: ['Summer', 'Autumn', 'Winter', 'Spring'], hint: 'New beginnings, warm breezes!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 Food Chain', q: 'Put this food chain in the correct order!', items: ['🌿 Grass', '🐛 Caterpillar', '🐸 Frog', '🦅 Eagle'], answer: ['🌿 Grass', '🐛 Caterpillar', '🐸 Frog', '🦅 Eagle'], hint: 'Plants always start a food chain!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'sort', badge: '📂 Plant Needs', q: "Sort what plants NEED vs DON'T NEED!", bins: ['✅ Need', '❌ Don\'t Need'], items: ['☀️ Sunlight', '💧 Water', '🔥 Fire', '🌱 Soil', '🧊 Ice', '💨 Air'], answer: { '✅ Need': ['☀️ Sunlight', '💧 Water', '🌱 Soil', '💨 Air'], '❌ Don\'t Need': ['🔥 Fire', '🧊 Ice'] }, hint: 'LAWS: Light, Air, Water, Soil!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'sequence', badge: '📋 Butterfly Cycle', q: 'Order the butterfly life cycle!', items: ['🦋 Butterfly', '🥚 Egg', '🐛 Caterpillar', '🫘 Chrysalis'], answer: ['🥚 Egg', '🐛 Caterpillar', '🫘 Chrysalis', '🦋 Butterfly'], hint: 'Starts as a tiny egg!' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'match', badge: '🔗 Animal Homes', q: 'Match each animal to where it lives!', pairs: [{ left: '🐟 Fish', right: '🌊 Water' }, { left: '🐦 Bird', right: '🌳 Tree' }, { left: '🐛 Worm', right: '🟫 Soil' }, { left: '🦁 Lion', right: '🌿 Jungle' }], hint: "Think about each animal's habitat!" },
+          ],
+          2: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'sort', badge: '📂 Habitats', q: 'Sort animals into their correct habitats!', bins: ['🌊 Water', '🌳 Land'], items: ['🐟 Fish', '🐘 Elephant', '🐬 Dolphin', '🦁 Lion', '🦈 Shark', '🐆 Cheetah'], answer: { '🌊 Water': ['🐟 Fish', '🐬 Dolphin', '🦈 Shark'], '🌳 Land': ['🐘 Elephant', '🦁 Lion', '🐆 Cheetah'] }, hint: 'Think where each animal lives!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '☁️ Water Cycle', q: 'Water evaporates from rivers and forms…?', visual: '☁️💧', sentence: 'Water evaporates to form __.', blank: 'clouds', options: ['ice', 'clouds', 'rain', 'snow'], hint: 'Look up at the sky!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 States of Water', q: 'Order the states of water from coldest to hottest!', items: ['💧 Liquid', '❄️ Solid', '♨️ Gas'], answer: ['❄️ Solid', '💧 Liquid', '♨️ Gas'], hint: 'Ice → Water → Steam!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'match', badge: '🔗 Animal Diet', q: 'Match the animal to its diet type!', pairs: [{ left: '🐅 Tiger', right: '🥩 Carnivore' }, { left: '🐄 Cow', right: '🌿 Herbivore' }, { left: '🐻 Bear', right: '🍯 Omnivore' }, { left: '🐇 Rabbit', right: '🥦 Herbivore' }], hint: 'Carnivore=meat, Herbivore=plants!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'sort', badge: '📂 Natural vs Man-made', q: 'Sort into Natural and Man-made things!', bins: ['🌿 Natural', '🏭 Man-made'], items: ['🌲 Tree', '🪑 Chair', '🌊 River', '📱 Phone', '☀️ Sun', '💡 Bulb'], answer: { '🌿 Natural': ['🌲 Tree', '🌊 River', '☀️ Sun'], '🏭 Man-made': ['🪑 Chair', '📱 Phone', '💡 Bulb'] }, hint: 'Did nature make it or humans?' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'fill', badge: '🌦️ Seasons', q: 'Which season comes after Summer?', visual: '🌞🍂', sentence: 'After Summer comes __.', blank: 'Autumn', options: ['Spring', 'Winter', 'Autumn', 'Monsoon'], hint: 'Leaves start falling!' },
+          ],
+          3: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'match', badge: '🔗 Adaptation', q: 'Match the animal to its special adaptation!', pairs: [{ left: '🐪 Camel', right: '💧 Stores water in hump' }, { left: '🐟 Fish', right: '🐠 Has gills to breathe' }, { left: '🦅 Eagle', right: '👁️ Sharp eyesight' }, { left: '🐸 Frog', right: '🌿 Lives on land & water' }], hint: 'How does each animal survive?' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🌍 Environment', q: 'Which gas do plants absorb during photosynthesis?', visual: '🌿☀️', sentence: 'Plants absorb __ gas.', blank: 'CO2', options: ['O2', 'CO2', 'N2', 'H2'], hint: 'Humans breathe it out!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sort', badge: '📂 Renewable Energy', q: 'Sort into Renewable and Non-Renewable energy!', bins: ['♻️ Renewable', '⛽ Non-Renewable'], items: ['☀️ Solar', '🛢️ Coal', '💨 Wind', '⚡ Nuclear', '🌊 Tidal', '🪨 Petroleum'], answer: { '♻️ Renewable': ['☀️ Solar', '💨 Wind', '🌊 Tidal'], '⛽ Non-Renewable': ['🛢️ Coal', '⚡ Nuclear', '🪨 Petroleum'] }, hint: 'Renewable never runs out!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'sequence', badge: '📋 Digestion', q: 'Order the path of food through the body!', items: ['🦷 Mouth', '🤢 Stomach', '🌀 Small Intestine', '🔄 Large Intestine'], answer: ['🦷 Mouth', '🤢 Stomach', '🌀 Small Intestine', '🔄 Large Intestine'], hint: 'Food enters from the top!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'fill', badge: '🌱 Photosynthesis', q: 'What do plants produce during photosynthesis?', visual: '🌿💡', sentence: 'Plants produce __ and glucose.', blank: 'O2', options: ['CO2', 'N2', 'O2', 'H2O'], hint: 'What we breathe in!' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'match', badge: '🔗 Food Web', q: 'Match each organism to its role in the food chain!', pairs: [{ left: '🌿 Grass', right: '🌱 Producer' }, { left: '🐛 Caterpillar', right: '🥬 Primary Consumer' }, { left: '🐸 Frog', right: '🍖 Secondary Consumer' }, { left: '🦅 Eagle', right: '👑 Apex Predator' }], hint: 'Producers make food, consumers eat it!' },
+          ]
+        },
+        eng: {
+          1: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'sort', badge: '📂 Vowels & Consonants', q: 'Sort letters into Vowels and Consonants!', bins: ['🔵 Vowel', '🔴 Consonant'], items: ['A', 'B', 'E', 'C', 'I', 'D', 'O', 'F'], answer: { '🔵 Vowel': ['A', 'E', 'I', 'O'], '🔴 Consonant': ['B', 'C', 'D', 'F'] }, hint: 'Vowels are A, E, I, O, U!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🖊️ Articles', q: 'Choose the right word!', visual: '☕', sentence: 'Granny makes __ cup of tea.', blank: 'a', options: ['a', 'an', 'the', 'some'], hint: '"A" before consonant sounds!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 Build a Sentence', q: 'Arrange words to make a sentence!', items: ['bakes', 'Granny', 'every', 'biscuits', 'Sunday'], answer: ['Granny', 'bakes', 'biscuits', 'every', 'Sunday'], hint: 'Who does the action? First!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'sort', badge: '📂 Nouns & Verbs', q: 'Sort words into Nouns and Verbs!', bins: ['🧑 Noun', '🏃 Verb'], items: ['teacher', 'run', 'book', 'jump', 'school', 'eat'], answer: { '🧑 Noun': ['teacher', 'book', 'school'], '🏃 Verb': ['run', 'jump', 'eat'] }, hint: 'Nouns=things, Verbs=actions!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'sequence', badge: '📋 Alphabetical Order', q: 'Put words in alphabetical order!', items: ['elephant', 'apple', 'cat', 'dog', 'bear'], answer: ['apple', 'bear', 'cat', 'dog', 'elephant'], hint: 'A comes first in the alphabet!' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'match', badge: '🔗 Opposites', q: 'Match each word to its opposite!', pairs: [{ left: 'Hot', right: 'Cold' }, { left: 'Big', right: 'Small' }, { left: 'Fast', right: 'Slow' }, { left: 'Happy', right: 'Sad' }], hint: 'These are called antonyms!' },
+          ],
+          2: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'sort', badge: '📂 Singular & Plural', q: 'Sort words into Singular and Plural!', bins: ['1️⃣ Singular', '🔢 Plural'], items: ['cat', 'dogs', 'book', 'birds', 'tree', 'leaves'], answer: { '1️⃣ Singular': ['cat', 'book', 'tree'], '🔢 Plural': ['dogs', 'birds', 'leaves'] }, hint: 'Plural usually ends in -s or -es!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🖊️ Tense', q: 'Choose the correct past tense!', visual: '📖', sentence: 'Yesterday, Granny __ a cake.', blank: 'baked', options: ['bake', 'bakes', 'baked', 'baking'], hint: 'Yesterday = past tense!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 Sentence Order', q: 'Arrange to form a correct sentence!', items: ['the', 'is', 'sky', 'blue'], answer: ['the', 'sky', 'is', 'blue'], hint: 'Start with the subject!' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'match', badge: '🔗 Synonyms', q: 'Match each word to its synonym!', pairs: [{ left: 'Happy', right: 'Joyful' }, { left: 'Big', right: 'Large' }, { left: 'Quick', right: 'Fast' }, { left: 'Angry', right: 'Furious' }], hint: 'Synonyms have the same meaning!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'sort', badge: '📂 Adjectives & Adverbs', q: 'Sort into Adjectives and Adverbs!', bins: ['🎨 Adjective', '🏃 Adverb'], items: ['quickly', 'tall', 'slowly', 'bright', 'softly', 'tiny'], answer: { '🎨 Adjective': ['tall', 'bright', 'tiny'], '🏃 Adverb': ['quickly', 'slowly', 'softly'] }, hint: 'Adjectives describe nouns; adverbs describe verbs!' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'fill', badge: '🖊️ Punctuation', q: 'Which punctuation ends a question?', visual: '❓', sentence: 'A question ends with __.', blank: '?', options: ['.', '!', '?', ','], hint: 'What do you see at the end of a question?' },
+          ],
+          3: [
+            { id: 'tin', icon: '🫙', name: 'Biscuit Tin', room: 'kitchen', gives: 'key_A', type: 'sort', badge: '📂 Parts of Speech', q: 'Sort words into their correct part of speech!', bins: ['📌 Noun', '⚡ Verb', '🎨 Adjective'], items: ['run', 'house', 'beautiful', 'eat', 'river', 'tiny'], answer: { '📌 Noun': ['house', 'river'], '⚡ Verb': ['run', 'eat'], '🎨 Adjective': ['beautiful', 'tiny'] }, hint: 'Noun=thing, Verb=action, Adjective=describes!' },
+            { id: 'clock', icon: '🕰️', name: 'Wall Clock', room: 'kitchen', gives: null, type: 'fill', badge: '🖊️ Conjunctions', q: 'Choose the correct conjunction!', visual: '🔗', sentence: 'I like tea __ coffee.', blank: 'and', options: ['but', 'and', 'or', 'so'], hint: 'Joining two similar things!' },
+            { id: 'book', icon: '📕', name: 'Recipe Book', room: 'lounge', gives: 'key_B', type: 'sequence', badge: '📋 Paragraph Order', q: 'Arrange these sentences to form a paragraph!', items: ['Finally, she served it hot.', 'Granny boiled the water.', 'Then she added tea leaves.', 'She poured it into a cup.'], answer: ['Granny boiled the water.', 'Then she added tea leaves.', 'She poured it into a cup.', 'Finally, she served it hot.'], hint: 'What happens first when making tea?' },
+            { id: 'shelf', icon: '📚', name: 'Bookshelf', room: 'library', gives: 'key_C', type: 'match', badge: '🔗 Prefixes', q: 'Match the prefix to its meaning!', pairs: [{ left: 'un-', right: 'Not / opposite' }, { left: 're-', right: 'Again' }, { left: 'pre-', right: 'Before' }, { left: 'mis-', right: 'Wrongly' }], hint: 'un=not, re=again, pre=before!' },
+            { id: 'lamp', icon: '🪔', name: 'Bedside Lamp', room: 'bedroom', gives: 'key_D', type: 'fill', badge: '🖊️ Active/Passive', q: 'Change to active voice: "The cake was baked by Granny."', visual: '🎂', sentence: 'Granny __ the cake.', blank: 'baked', options: ['is baking', 'was baked', 'baked', 'bakes'], hint: 'Who is doing the action?' },
+            { id: 'vase', icon: '🌷', name: 'Flower Vase', room: 'garden', gives: null, type: 'sort', badge: '📂 Homophones', q: 'Sort these homophones into correct pairs!', bins: ['🔊 Group A', '🔊 Group B'], items: ['their', 'there', 'here', 'hear', 'write', 'right'], answer: { '🔊 Group A': ['their', 'here', 'write'], '🔊 Group B': ['there', 'hear', 'right'] }, hint: 'Homophones sound the same but differ in meaning!' },
+          ]
+        }
+      };
+      const b = banks[subj] || banks.math; return b[cls] || (banks.math[1]);
+    }
+
+    /* ═══════════ THREE.JS ═══════════ */
+    const canvas = document.getElementById('c');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050301);
+    scene.fog = new THREE.Fog(0x100800, 12, 42);
+
+    const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .05, 80);
+
+    function onResize() { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
+    addEventListener('resize', onResize); onResize();
+
+    /* ═══════════ CARTOON CHARACTER ═══════════ */
+    /* Rounded cartoon style using scaled BoxGeometry + MeshToonMaterial */
+    let charGroup, charParts = {};
+
+    function makeToon(color) {
+      return new THREE.MeshToonMaterial({ color });
+    }
+
+    function buildCharacter() {
+      charGroup = new THREE.Group();
+
+      // Proportions: big head, stubby body, small legs — cartoon style
+      const skinC = 0xffcc88, shirtC = 0x3377ee, pantsC = 0x223388, shoeC = 0x332211, hairC = 0x441100, eyeC = 0x000000, noseC = 0xffaa66, mouthC = 0xcc3333;
+
+      // === HEAD ===
+      const headGeo = new THREE.SphereGeometry(.45, 16, 16);
+      const head = new THREE.Mesh(headGeo, makeToon(skinC));
+      head.position.set(0, 2.2, 0); head.castShadow = true;
+      charGroup.add(head); charParts.head = head;
+
+      // Hair 
+      const hairGeom = new THREE.SphereGeometry(.48, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2.2);
+      const hair = new THREE.Mesh(hairGeom, makeToon(hairC));
+      hair.position.set(0, 2.2, 0); charGroup.add(hair);
+
+      // Eyes
+      const eyeWhiteGeo = new THREE.SphereGeometry(.1, 8, 8);
+      const ewL = new THREE.Mesh(eyeWhiteGeo, makeToon(0xffffff)); ewL.position.set(-.18, 2.28, .38); charGroup.add(ewL);
+      const ewR = new THREE.Mesh(eyeWhiteGeo, makeToon(0xffffff)); ewR.position.set(.18, 2.28, .38); charGroup.add(ewR);
+      const pupilGeo = new THREE.SphereGeometry(.05, 8, 8);
+      const pL = new THREE.Mesh(pupilGeo, makeToon(eyeC)); pL.position.set(-.18, 2.28, .44); charGroup.add(pL); charParts.pupilL = pL;
+      const pR = new THREE.Mesh(pupilGeo, makeToon(eyeC)); pR.position.set(.18, 2.28, .44); charGroup.add(pR); charParts.pupilR = pR;
+
+      // Neck
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(.12, .15, .2, 8), makeToon(skinC));
+      neck.position.set(0, 1.75, 0); charGroup.add(neck);
+
+      // === BODY ===
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(.35, .32, 1.0, 12), makeToon(shirtC));
+      body.position.set(0, 1.25, 0); body.castShadow = true; charGroup.add(body); charParts.body = body;
+      
+      // === ARMS ===
+      const armGeo = new THREE.CylinderGeometry(.1, .08, .8, 8);
+      const armLG = new THREE.Group(); armLG.position.set(-.45, 1.6, 0);
+      const armLM = new THREE.Mesh(armGeo, makeToon(shirtC)); armLM.position.set(0, -.4, 0); armLM.castShadow = true; armLG.add(armLM);
+      charGroup.add(armLG); charParts.armLG = armLG;
+      const armRG = new THREE.Group(); armRG.position.set(.45, 1.6, 0);
+      const armRM = new THREE.Mesh(armGeo, makeToon(shirtC)); armRM.position.set(0, -.4, 0); armRM.castShadow = true; armRG.add(armRM);
+      charGroup.add(armRG); charParts.armRG = armRG;
+      
+      // Hands
+      const handGeo = new THREE.SphereGeometry(.12, 8, 8);
+      const handL = new THREE.Mesh(handGeo, makeToon(skinC)); handL.position.set(0, -.85, 0); armLG.add(handL);
+      const handR = new THREE.Mesh(handGeo, makeToon(skinC)); handR.position.set(0, -.85, 0); armRG.add(handR);
+
+      // === LEGS === 
+      const legGeo = new THREE.CylinderGeometry(.14, .1, .8, 8);
+      const legLG = new THREE.Group(); legLG.position.set(-.18, .75, 0);
+      const legLM = new THREE.Mesh(legGeo, makeToon(pantsC)); legLM.position.set(0, -.4, 0); legLM.castShadow = true; legLG.add(legLM);
+      charGroup.add(legLG); charParts.legLG = legLG;
+      const legRG = new THREE.Group(); legRG.position.set(.18, .75, 0);
+      const legRM = new THREE.Mesh(legGeo, makeToon(pantsC)); legRM.position.set(0, -.4, 0); legRM.castShadow = true; legRG.add(legRM);
+      charGroup.add(legRG); charParts.legRG = legRG;
+      
+      // Feet
+      const footGeo = new THREE.BoxGeometry(.2, .15, .3);
+      const footL = new THREE.Mesh(footGeo, makeToon(shoeC)); footL.position.set(0, -.85, .05); legLG.add(footL);
+      const footR = new THREE.Mesh(footGeo, makeToon(shoeC)); footR.position.set(0, -.85, .05); legRG.add(footR);
+
+      // Outline effect — slightly scaled dark version
+      function addOutline(mesh, grp) {
+        const out = mesh.clone();
+        out.material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+        out.scale.multiplyScalar(1.08);
+        grp.add(out);
+      }
+      addOutline(head, charGroup);
+      addOutline(body, charGroup);
+
+      scene.add(charGroup);
+    }
+
+    /* ═══════════ GRANNY NPC ═══════════ */
+    let grannyGroup, grannyParts = {};
+    function buildGranny() {
+      grannyGroup = new THREE.Group();
+      const skC = 0xffc090, drC = 0x7755aa, hairC = 0xddddbb, glC = 0x885533;
+      // Head
+      const head = new THREE.Mesh(new THREE.BoxGeometry(.8, .8, .8), makeToon(skC)); head.position.set(0, 1.95, 0); grannyGroup.add(head); grannyParts.head = head;
+      // Hair bun
+      const bun = new THREE.Mesh(new THREE.SphereGeometry(.35, 8, 8), makeToon(hairC)); bun.position.set(0, 2.42, 0); grannyGroup.add(bun);
+      const bunBack = new THREE.Mesh(new THREE.BoxGeometry(.75, .35, .6), makeToon(hairC)); bunBack.position.set(0, 2.3, -.2); grannyGroup.add(bunBack);
+      // Eyes
+      ['-.2', '.2'].forEach(x => { const e = new THREE.Mesh(new THREE.BoxGeometry(.12, .1, .06), makeToon(0x224488)); e.position.set(+x, 2.02, .42); grannyGroup.add(e); });
+      // Glasses frames
+      const gfM = makeToon(glC);
+      const gf = new THREE.Mesh(new THREE.BoxGeometry(.46, .06, .04), gfM); gf.position.set(0, 1.98, .44); grannyGroup.add(gf);
+      ['-.18', '.18'].forEach(x => { const c = new THREE.Mesh(new THREE.BoxGeometry(.18, .18, .04), new THREE.MeshToonMaterial({ color: 0x88bbff, transparent: true, opacity: .35 })); c.position.set(+x, 1.98, .43); grannyGroup.add(c); });
+      // Body
+      const body = new THREE.Mesh(new THREE.BoxGeometry(.75, .95, .45), makeToon(drC)); body.position.set(0, 1.1, 0); grannyGroup.add(body);
+      // Apron
+      const apron = new THREE.Mesh(new THREE.BoxGeometry(.6, .75, .3), makeToon(0xffffff)); apron.position.set(0, 1.0, .22); grannyGroup.add(apron);
+      // Arms
+      const armGeo = new THREE.BoxGeometry(.26, .55, .26);
+      const aLG = new THREE.Group(); aLG.position.set(-.52, 1.45, 0);
+      const aLM = new THREE.Mesh(armGeo, makeToon(drC)); aLM.position.set(0, -.26, 0); aLG.add(aLM);
+      grannyGroup.add(aLG); grannyParts.aLG = aLG;
+      const aRG = new THREE.Group(); aRG.position.set(.52, 1.45, 0);
+      const aRM = new THREE.Mesh(armGeo, makeToon(drC)); aRM.position.set(0, -.26, 0); aRG.add(aRM);
+      grannyGroup.add(aRG); grannyParts.aRG = aRG;
+      // Legs
+      const lGeo = new THREE.BoxGeometry(.28, .6, .28);
+      const lLG = new THREE.Group(); lLG.position.set(-.2, .56, 0); const lLM = new THREE.Mesh(lGeo, makeToon(0x332255)); lLM.position.set(0, -.3, 0); lLG.add(lLM); grannyGroup.add(lLG); grannyParts.lLG = lLG;
+      const lRG = new THREE.Group(); lRG.position.set(.2, .56, 0); const lRM = new THREE.Mesh(lGeo, makeToon(0x332255)); lRM.position.set(0, -.3, 0); lRG.add(lRM); grannyGroup.add(lRG); grannyParts.lRG = lRG;
+      // Feet
+      [[lLG, -.2], [lRG, .2]].forEach(([g, x]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(.3, .16, .4), makeToon(0x221100)); f.position.set(0, -.54, .04); g.add(f); });
+      // Cane
+      const cane = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 1.2, 6), makeToon(0x8b4513)); cane.position.set(.52, .55, .3); cane.rotation.z = -.15; grannyGroup.add(cane);
+
+      scene.add(grannyGroup);
+    }
+
+    /* ═══════════ ROOM LAYOUT & WALLS ═══════════ */
+    /* Rooms laid out in world XZ. Each room is W×H×D box.
+       Walls are actual solid meshes. Doorways are gaps in walls.
+       Player AABB collision checks against all wall AABBs.              */
+
+    const RW = 14, RD = 14, WH = 3.6, WT = 0.45; // room width/depth, wall height/thickness
+    const DOOR_W = 2.4, DOOR_H = 2.9; // doorway dimensions (module-level so buildDoorFrame can access)
+
+    // Room centers — spaced exactly RW/RD apart so walls are flush
+    const RC = {
+      kitchen: new THREE.Vector3(0, 0, 0),
+      lounge:  new THREE.Vector3(14, 0, 0),
+      library: new THREE.Vector3(28, 0, 0),
+      bedroom: new THREE.Vector3(14, 0, -14),
+      garden:  new THREE.Vector3(0, 0, -14),
+    };
+
+    const RNAMES = { kitchen: '🍵 Kitchen', lounge: '🛋️ Lounge', library: '📚 Library', bedroom: '🛏️ Bedroom', garden: '🌻 Garden' };
+
+    // Connection map: which rooms share a wall opening
+    const CONNECTIONS = [
+      ['kitchen', 'lounge',  new THREE.Vector3(7, 0, 0),  'x'],
+      ['lounge',  'library', new THREE.Vector3(7, 0, 0),  'x'],
+      ['lounge',  'bedroom', new THREE.Vector3(0, 0, -7), 'z'],
+      ['garden',  'kitchen', new THREE.Vector3(0, 0, 7),  'z'],
+      ['garden',  'bedroom', new THREE.Vector3(7, 0, 0),  'x'],
+    ];
+
+    const wallBoxes = []; // {min,max} AABB list for collision
+
+    // Materials per room
+    const ROOM_MATS = {
+      kitchen: { wall: 0xe8c888, floor: 0xc4a050, ceil: 0xf0e0c0 },
+      lounge: { wall: 0xd8c0a8, floor: 0x9a7a50, ceil: 0xe8dcc0 },
+      library: { wall: 0x3a2c18, floor: 0x5a3a1c, ceil: 0x2a2010 },
+      bedroom: { wall: 0xe0c8d4, floor: 0xc090a8, ceil: 0xf0e0e8 },
+      garden: { wall: 0x7aaad8, floor: 0x5a8a30, ceil: 0x90c0e8 },
+    };
+
+    const tC = m => '#' + m.toString(16).padStart(6, '0');
+    function toonFloor(c) { return new THREE.MeshLambertMaterial({ color: c, map: createGridTexture(tC(c)) }); }
+
+    function buildRooms() {
+      Object.entries(RC).forEach(([name, cen]) => {
+        const m = ROOM_MATS[name];
+        const grp = new THREE.Group(); grp.position.copy(cen);
+
+        // Floor
+        const fl = new THREE.Mesh(new THREE.BoxGeometry(RW, 0.2, RD), toonFloor(m.floor));
+        fl.position.set(0, -.1, 0); fl.receiveShadow = true; grp.add(fl);
+
+        // Ceiling
+        const ce = new THREE.Mesh(new THREE.BoxGeometry(RW, 0.2, RD), toonFloor(m.ceil));
+        ce.position.set(0, WH + .1, 0); grp.add(ce);
+
+        // Determine which walls have doorways to neighbours
+        const gaps = { px: null, nx: null, pz: null, nz: null }; // gap centre (world Y ignored, local X or Z)
+        CONNECTIONS.forEach(([a, b, off, ax]) => {
+          const rA = a === name, rB = b === name;
+          if (!rA && !rB) return;
+          const worldOff = rA ? RC[a].clone().add(off) : RC[b].clone().add(off.clone().negate().add(new THREE.Vector3(ax === 'x' ? 10 : 0, 0, ax === 'z' ? 10 : 0)));
+          const localOff = worldOff.clone().sub(cen);
+          if (ax === 'x') { if (rA && off.x > 0) gaps.px = localOff.z; else if (rA && off.x < 0) gaps.nx = localOff.z; else if (rB && off.x > 0) gaps.nx = localOff.z; else gaps.px = localOff.z; }
+          else { if (rA && off.z < 0) gaps.nz = localOff.x; else if (rA && off.z > 0) gaps.pz = localOff.x; else if (rB && off.z < 0) gaps.pz = localOff.x; else gaps.nz = localOff.x; }
+        });
+
+        const wallMat = new THREE.MeshLambertMaterial({ color: m.wall, map: createWoodTexture(tC(m.wall)) });
+
+        // Wall builder with optional doorway gap
+        function makeWall(x, y, z, w, h, d, gapAlong, gapAxis, wallDir) {
+          if (gapAlong === null) {
+            // Solid wall
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+            mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; grp.add(mesh);
+            addWallAABB(cen, x, y, z, w, h, d);
+          } else {
+            // Split into segments around door gap
+            const halfFull = (gapAxis === 'x' ? w : d) / 2;
+            const gapStart = gapAlong - DOOR_W / 2, gapEnd = gapAlong + DOOR_W / 2;
+            const left = gapStart + halfFull, right = halfFull - gapEnd;
+            // Left segment
+            if (left > 0.05) {
+              const lx = gapAxis === 'x' ? -halfFull + left / 2 : x, lz = gapAxis === 'z' ? -halfFull + left / 2 : z;
+              const lw = gapAxis === 'x' ? left : w, ld = gapAxis === 'z' ? left : d;
+              const m2 = new THREE.Mesh(new THREE.BoxGeometry(lw, h, ld), wallMat); m2.position.set(lx, y, lz); m2.castShadow = true; m2.receiveShadow = true; grp.add(m2);
+              addWallAABB(cen, lx, y, lz, lw, h, ld);
+            }
+            // Right segment
+            if (right > 0.05) {
+              const rx = gapAxis === 'x' ? halfFull - right / 2 : x, rz = gapAxis === 'z' ? halfFull - right / 2 : z;
+              const rw = gapAxis === 'x' ? right : w, rd2 = gapAxis === 'z' ? right : d;
+              const m2 = new THREE.Mesh(new THREE.BoxGeometry(rw, h, rd2), wallMat); m2.position.set(rx, y, rz); m2.castShadow = true; m2.receiveShadow = true; grp.add(m2);
+              addWallAABB(cen, rx, y, rz, rw, h, rd2);
+            }
+            // Top lintel above door
+            const lintH = h - DOOR_H, lintW = gapAxis === 'x' ? DOOR_W : w, lintD = gapAxis === 'z' ? DOOR_W : d;
+            if (lintH > 0.05) {
+              const lx2 = gapAxis === 'x' ? gapAlong : x, lz2 = gapAxis === 'z' ? gapAlong : z;
+              const lm = new THREE.Mesh(new THREE.BoxGeometry(lintW, lintH, lintD), wallMat);
+              lm.position.set(lx2, DOOR_H + lintH / 2, lz2); lm.castShadow = true; grp.add(lm);
+              addWallAABB(cen, lx2, DOOR_H + lintH / 2, lz2, lintW, lintH, lintD);
+            }
+            // Door frame (visible arch) — pass the wall's perpendicular position so frame sits on the wall, not in room centre
+            const wallPerp = gapAxis === 'z' ? x : z;
+            buildDoorFrame(grp, gapAlong, gapAxis, wallDir, wallPerp);
+          }
+        }
+
+        // +X wall
+        makeWall(RW / 2, WH / 2, 0, WT, WH, RD, gaps.px, 'z', '+x');
+        // -X wall
+        makeWall(-RW / 2, WH / 2, 0, WT, WH, RD, gaps.nx, 'z', '-x');
+        // +Z wall
+        makeWall(0, WH / 2, RD / 2, RW, WH, WT, gaps.pz, 'x', '+z');
+        // -Z wall
+        makeWall(0, WH / 2, -RD / 2, RW, WH, WT, gaps.nz, 'x', '-z');
+
+        // Room-specific decor
+        addRoomDecor(grp, name, m);
+
+        // Room light
+        if (name !== 'garden') {
+          const pl = new THREE.PointLight(0xffcc88, 1.0, 14); pl.position.set(0, WH - .3, 0); pl.castShadow = true; grp.add(pl);
+          const bulb = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffee99 })); bulb.position.copy(pl.position); grp.add(bulb);
+        } else {
+          grp.add(new THREE.HemisphereLight(0x8bb8d4, 0x5a8a30, 1.4));
+        }
+
+        scene.add(grp);
+      });
+    }
+
+    function addWallAABB(cen, lx, ly, lz, w, h, d) {
+      const wx = cen.x + lx, wy = cen.y + ly, wz = cen.z + lz;
+      wallBoxes.push({ min: new THREE.Vector3(wx - w / 2, wy - h / 2, wz - d / 2), max: new THREE.Vector3(wx + w / 2, wy + h / 2, wz + d / 2) });
+    }
+
+    // Visible door frame with actual door mesh (open)
+    // wallPerp = the wall's perpendicular coordinate (x for Z-axis walls, z for X-axis walls)
+    function buildDoorFrame(grp, gapAlong, gapAxis, wallDir, wallPerp) {
+      const fMat = new THREE.MeshLambertMaterial({ color: 0x6a3818, map: createWoodTexture('#6a3818') });
+      const dMat = new THREE.MeshLambertMaterial({ color: 0x5a2810, map: createWoodTexture('#5a2810') });
+      const postH = DOOR_H, postW = 0.2;
+      const knobMat = new THREE.MeshLambertMaterial({ color: 0xd4a017 });
+      // offA = position along the wall axis, offB = position perpendicular (at the wall face)
+      const offA = gapAxis === 'x' ? gapAlong : wallPerp;
+      const offB = gapAxis === 'z' ? gapAlong : wallPerp;
+      const lPost = new THREE.Mesh(new THREE.BoxGeometry(postW, postH, postW), fMat);
+      const rPost = new THREE.Mesh(new THREE.BoxGeometry(postW, postH, postW), fMat);
+      if (gapAxis === 'x') {
+        // Wall runs along X (top/bottom wall); doorway gap is along X
+        lPost.position.set(offA - DOOR_W / 2, postH / 2, offB);
+        rPost.position.set(offA + DOOR_W / 2, postH / 2, offB);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W + postW * 2, postW, WT + .05), fMat);
+        top.position.set(offA, DOOR_H, offB);
+        // Door leaf parallel to the wall
+        const door = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W - .04, DOOR_H - .05, .12), dMat);
+        door.position.set(offA - DOOR_W / 2 - (DOOR_W - .04)/2 + 0.1, DOOR_H / 2, offB + WT/2 + 0.06);
+        grp.add(door);
+        const knob = new THREE.Mesh(new THREE.SphereGeometry(.08, 8, 8), knobMat);
+        knob.position.set(offA - DOOR_W + 0.3, DOOR_H * .42, offB + WT/2 + 0.14); grp.add(knob);
+        [lPost, rPost, top].forEach(m => { m.castShadow = true; grp.add(m); });
+      } else {
+        // Wall runs along Z (left/right wall); doorway gap is along Z
+        lPost.position.set(offA, postH / 2, offB - DOOR_W / 2);
+        rPost.position.set(offA, postH / 2, offB + DOOR_W / 2);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(WT + .05, postW, DOOR_W + postW * 2), fMat);
+        top.position.set(offA, DOOR_H, offB);
+        const door = new THREE.Mesh(new THREE.BoxGeometry(.12, DOOR_H - .05, DOOR_W - .04), dMat);
+        door.position.set(offA + WT/2 + 0.06, DOOR_H / 2, offB - DOOR_W / 2 - (DOOR_W - .04)/2 + 0.1);
+        grp.add(door);
+        const knob = new THREE.Mesh(new THREE.SphereGeometry(.08, 8, 8), knobMat);
+        knob.position.set(offA + WT/2 + 0.14, DOOR_H * .42, offB - DOOR_W + 0.3); grp.add(knob);
+        [lPost, rPost, top].forEach(m => { m.castShadow = true; grp.add(m); });
+      }
+    }
+
+    function addRoomDecor(grp, name, m) {
+      const dM = new THREE.MeshLambertMaterial({ color: 0x8b4513, map: createWoodTexture('#8b4513') });
+      const woodM = c => new THREE.MeshLambertMaterial({ color: c, map: createWoodTexture(tC(c)) });
+
+      if (name === 'kitchen') {
+        // Counter on left half of -Z wall
+        const ct = new THREE.Mesh(new THREE.BoxGeometry(4.5, .92, 1.1), woodM(0xd4a050)); ct.position.set(-4.5, .46, -6.45); ct.castShadow = true; grp.add(ct);
+        const stove = new THREE.Mesh(new THREE.BoxGeometry(1.2, .08, .9), woodM(0x333333)); stove.position.set(-3.5, .97, -6.4); grp.add(stove);
+        [[-3.8, 0], [-3.2, 0], [-3.8, .4], [-3.2, .4]].forEach(([x, z]) => { const b = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .06, 8), woodM(0x111111)); b.position.set(x, 1.0, -6.2 + z); grp.add(b); });
+        const pot = new THREE.Mesh(new THREE.CylinderGeometry(.15, .12, .22, 8), woodM(0x444444)); pot.position.set(-3.8, 1.13, -6.4); grp.add(pot);
+        const sink = new THREE.Mesh(new THREE.BoxGeometry(.9, .1, .75), woodM(0xaaaaaa)); sink.position.set(-5.5, .97, -6.4); grp.add(sink);
+        const tap = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .4, 6), woodM(0x888888)); tap.position.set(-5.5, 1.25, -6.55); tap.rotation.z = Math.PI / 2; grp.add(tap);
+        const cab = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.3, .65), woodM(0xc09050)); cab.position.set(-4.5, 2.65, -6.75); grp.add(cab);
+        const rack = new THREE.Mesh(new THREE.BoxGeometry(2, .06, .5), woodM(0x555533)); rack.position.set(-4.5, 2.8, -1.5); grp.add(rack);
+        [-5, -4.5, -4].forEach((x, i) => { const hp = new THREE.Mesh(new THREE.CylinderGeometry(.17, .14, .28, 8), woodM(0x7a5533 + i * 0x111100)); hp.position.set(x, 2.5, -1.5); grp.add(hp); });
+        const win = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.5, .05), new THREE.MeshLambertMaterial({ color: 0x88ccee, emissive: 0x446688, emissiveIntensity: .5 })); win.position.set(4.5, 2.2, -6.92); grp.add(win);
+        const wf = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.8, .08), dM); wf.position.set(4.5, 2.2, -6.88); grp.add(wf);
+        const curL = new THREE.Mesh(new THREE.BoxGeometry(.35, 1.5, .08), woodM(0xcc9966)); curL.position.set(3.4, 2.2, -6.86); grp.add(curL);
+        const curR = new THREE.Mesh(new THREE.BoxGeometry(.35, 1.5, .08), woodM(0xcc9966)); curR.position.set(5.6, 2.2, -6.86); grp.add(curR);
+        // Kitchen table
+        const ktab = new THREE.Mesh(new THREE.BoxGeometry(2.5, .1, 1.5), woodM(0xc08040)); ktab.position.set(3, .85, 2); grp.add(ktab);
+        [[2, .4, 1.1], [4, .4, 1.1], [2, .4, 2.9], [4, .4, 2.9]].forEach(([x, y, z]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.1, .84, .1), woodM(0xa06030)); l.position.set(x, y, z); grp.add(l); });
+        [[2, 3.5], [4, 3.5], [2, .5], [4, .5]].forEach(([x, z]) => { const s = new THREE.Mesh(new THREE.BoxGeometry(.7, .1, .7), woodM(0x885522)); s.position.set(x, .55, z); grp.add(s); });
+        // Wall shelf with jars
+        const wsh = new THREE.Mesh(new THREE.BoxGeometry(3, .1, .35), woodM(0xa07840)); wsh.position.set(4.5, 1.9, -6.75); grp.add(wsh);
+        [0xcc6622, 0x44aa44, 0xeecc22].forEach((c, i) => { const jar = new THREE.Mesh(new THREE.CylinderGeometry(.12, .1, .28, 8), woodM(c)); jar.position.set(3.5 + i * .85, 2.08, -6.7); grp.add(jar); });
+      }
+
+      if (name === 'lounge') {
+        // Sofa on +Z wall
+        const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(3.5, .55, 1.0), woodM(0x8855aa)); sofaBase.position.set(0, .28, 6.2); grp.add(sofaBase);
+        const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(3.5, .75, .35), woodM(0x7744aa)); sofaBack.position.set(0, .8, 6.55); grp.add(sofaBack);
+        const sofaSeat = new THREE.Mesh(new THREE.BoxGeometry(3.3, .15, .95), woodM(0x9966bb)); sofaSeat.position.set(0, .63, 6.15); grp.add(sofaSeat);
+        [-1.75, 1.75].forEach(x => { const ar = new THREE.Mesh(new THREE.BoxGeometry(.3, .45, .9), woodM(0x7744aa)); ar.position.set(x, .65, 6.2); grp.add(ar); });
+        [-1, 0, 1].forEach(x => { const cu = new THREE.Mesh(new THREE.BoxGeometry(.9, .24, .55), woodM(0xaa88cc)); cu.position.set(x, .73, 6.0); grp.add(cu); });
+        // Armchair (for Granny) — at world (14-4,0,3) → local (-4.5, 0, 3.2)
+        const acSeat = new THREE.Mesh(new THREE.BoxGeometry(1.2, .42, 1.1), woodM(0x7755aa)); acSeat.position.set(-4.5, .21, 3.2); grp.add(acSeat);
+        const acBack = new THREE.Mesh(new THREE.BoxGeometry(.25, .9, 1.1), woodM(0x6644aa)); acBack.position.set(-5.1, .8, 3.2); grp.add(acBack);
+        const acSeatCush = new THREE.Mesh(new THREE.BoxGeometry(1.0, .18, .95), woodM(0x9977bb)); acSeatCush.position.set(-4.45, .48, 3.2); grp.add(acSeatCush);
+        [-3.65, -3.65, -4.25, -4.25].forEach((x, i) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.12, .22, .12), woodM(0x5a3a18)); l.position.set(x, .11, 3.2 + (i % 2 === 0 ? -.42 : .42)); grp.add(l); });
+        [-.57, .57].forEach(z => { const arm = new THREE.Mesh(new THREE.BoxGeometry(.55, .22, .18), woodM(0x7744aa)); arm.position.set(-4.5, .56, 3.2 + z); grp.add(arm); });
+        // Coffee table
+        const ctab = new THREE.Mesh(new THREE.BoxGeometry(1.8, .1, .9), woodM(0x7a5030)); ctab.position.set(0, .42, 4.5); grp.add(ctab);
+        const ctabLegs = [[-.7, .3], [.7, .3], [-.7, -.3], [.7, -.3]];
+        ctabLegs.forEach(([x, z]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.1, .4, .1), woodM(0x6a4020)); l.position.set(x, .2, z + 4.5); grp.add(l); });
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(.09, .07, .14, 8), woodM(0xffffff)); cup.position.set(0, .5, 4.5); grp.add(cup);
+        // TV console against +X wall
+        const tvStand = new THREE.Mesh(new THREE.BoxGeometry(.55, .7, 2.2), woodM(0x4a3020)); tvStand.position.set(6.5, .35, -3); grp.add(tvStand);
+        const tvScreen = new THREE.Mesh(new THREE.BoxGeometry(.08, 1.3, 2.0), new THREE.MeshLambertMaterial({ color: 0x111122, emissive: 0x002244, emissiveIntensity: .5 })); tvScreen.position.set(6.22, 1.35, -3); grp.add(tvScreen);
+        // Rug
+        const rug = new THREE.Mesh(new THREE.BoxGeometry(4.5, .02, 3.0), new THREE.MeshLambertMaterial({ color: 0x884422 })); rug.position.set(0, .01, 4.5); grp.add(rug);
+        // Painting on -Z wall
+        const pfr = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, .06), woodM(0x6a3010)); pfr.position.set(-4, 2.2, -6.95); grp.add(pfr);
+        const pcan = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.3, .05), new THREE.MeshLambertMaterial({ color: 0x5588bb })); pcan.position.set(-4, 2.2, -6.92); grp.add(pcan);
+        // Floor lamp
+        const lmpPole = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 1.6, 8), woodM(0xaaaaaa)); lmpPole.position.set(-2.5, .8, 5.5); grp.add(lmpPole);
+        const lmpShade = new THREE.Mesh(new THREE.CylinderGeometry(.35, .25, .3, 8), woodM(0xeeddcc)); lmpShade.position.set(-2.5, 1.65, 5.5); grp.add(lmpShade);
+        const lmpLight = new THREE.PointLight(0xffdd88, .6, 5); lmpLight.position.set(-2.5, 1.55, 5.5); grp.add(lmpLight);
+        // Side table next to armchair
+        const side = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), woodM(0x6a4020)); side.position.set(-3.3, .28, 3.2); grp.add(side);
+        const sideTop = new THREE.Mesh(new THREE.BoxGeometry(.65, .06, .65), woodM(0x7a5030)); sideTop.position.set(-3.3, .58, 3.2); grp.add(sideTop);
+      }
+
+      if (name === 'library') {
+        // Main bookcase (wide, along -Z wall)
+        const bc = new THREE.Mesh(new THREE.BoxGeometry(8, 3.2, .7), woodM(0x5a3a18)); bc.position.set(-1, 1.6, -6.65); grp.add(bc);
+        // Coloured books on shelves
+        [[0xcc4444, -4], [0x4488cc, -3.2], [0xaacc44, -2.4], [0xccaa22, -1.6], [0xcc44aa, -.8], [0x44ccaa, 0], [0xee8833, .8], [0x8844cc, 1.6], [0xcc3366, 2.4], [0x33aacc, 3.2]].forEach(([c, x]) => {
+          const bk = new THREE.Mesh(new THREE.BoxGeometry(.45, 2.0, .6), woodM(c)); bk.position.set(x, 1.4, -6.65); grp.add(bk);
+        });
+        // Second bookcase on +X wall
+        const bc2 = new THREE.Mesh(new THREE.BoxGeometry(.7, 3.0, 4), woodM(0x5a3a18)); bc2.position.set(6.65, 1.5, -1); grp.add(bc2);
+        [[0xdd6644, -2.5], [0x55aacc, -1.5], [0xbbcc33, -.5], [0xddaa44, .5], [0xaa55cc, 1.5]].forEach(([c, z]) => {
+          const bk = new THREE.Mesh(new THREE.BoxGeometry(.6, 2.5, .52), woodM(c)); bk.position.set(6.65, 1.4, z); grp.add(bk);
+        });
+        // Desk with chair
+        const desk = new THREE.Mesh(new THREE.BoxGeometry(3.5, .1, 1.6), woodM(0x6a4020)); desk.position.set(3, 1.0, 3); grp.add(desk);
+        [[-1.6, .45, -.7], [1.6, .45, -.7], [-1.6, .45, .7], [1.6, .45, .7]].forEach(([dx, dy, dz]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.1, .9, .1), woodM(0x5a3010)); l.position.set(3 + dx, dy, 3 + dz); grp.add(l); });
+        // Chair at desk
+        const dchairSeat = new THREE.Mesh(new THREE.BoxGeometry(.9, .1, .9), woodM(0x4455aa)); dchairSeat.position.set(3, .55, 4.5); grp.add(dchairSeat);
+        const dchairBack = new THREE.Mesh(new THREE.BoxGeometry(.9, .7, .12), woodM(0x3344aa)); dchairBack.position.set(3, 1.05, 5.0); grp.add(dchairBack);
+        [[-.35, .35], [.35, .35], [-.35, -.35], [.35, -.35]].forEach(([dx, dz]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.1, .54, .1), woodM(0x334499)); l.position.set(3 + dx, .27, 4.5 + dz); grp.add(l); });
+        // Globe on desk
+        const globe = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 10), woodM(0x2266aa)); globe.position.set(4.5, 1.45, 3); grp.add(globe);
+        const globeBase = new THREE.Mesh(new THREE.CylinderGeometry(.06, .12, .35, 8), woodM(0x8b4513)); globeBase.position.set(4.5, 1.15, 3); grp.add(globeBase);
+        // Reading lamp on desk
+        const dlPole = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .7, 6), woodM(0xaaaaaa)); dlPole.position.set(1.5, 1.45, 3); grp.add(dlPole);
+        const dlShade = new THREE.Mesh(new THREE.CylinderGeometry(.2, .14, .2, 8), woodM(0xeedd88)); dlShade.position.set(1.5, 1.87, 3); grp.add(dlShade);
+        const dlLight = new THREE.PointLight(0xffee88, .5, 4); dlLight.position.set(1.5, 1.8, 3); grp.add(dlLight);
+        // Reading armchair
+        const acs = new THREE.Mesh(new THREE.BoxGeometry(1.1, .42, 1.0), woodM(0x8b4513)); acs.position.set(-3, .21, 4.5); grp.add(acs);
+        const acb = new THREE.Mesh(new THREE.BoxGeometry(.22, .8, 1.0), woodM(0x7a3a10)); acb.position.set(-3.55, .8, 4.5); grp.add(acb);
+        // Rug
+        const rug2 = new THREE.Mesh(new THREE.BoxGeometry(5, .02, 4), new THREE.MeshLambertMaterial({ color: 0x442211 })); rug2.position.set(3, .01, 3); grp.add(rug2);
+      }
+
+      if (name === 'bedroom') {
+        // Bed frame on +X wall
+        const bf = new THREE.Mesh(new THREE.BoxGeometry(3.5, .38, 5.5), woodM(0x7a4020)); bf.position.set(4.5, .19, 0); grp.add(bf);
+        const mat = new THREE.Mesh(new THREE.BoxGeometry(3.2, .42, 5.1), woodM(0xeeddcc)); mat.position.set(4.5, .59, 0); grp.add(mat);
+        const pillow = new THREE.Mesh(new THREE.BoxGeometry(2.6, .28, 1.1), woodM(0xffffff)); pillow.position.set(4.5, .88, -1.8); grp.add(pillow);
+        const blanket = new THREE.Mesh(new THREE.BoxGeometry(3.0, .18, 3.5), woodM(0xaa8899)); blanket.position.set(4.5, .82, 0.8); grp.add(blanket);
+        const hd = new THREE.Mesh(new THREE.BoxGeometry(3.5, 1.8, .32), woodM(0x6a3010)); hd.position.set(4.5, 1.3, -2.55); grp.add(hd);
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(3.5, .7, .28), woodM(0x7a4020)); foot.position.set(4.5, .54, 2.55); grp.add(foot);
+        // Bedside lamp
+        const nsLamp = new THREE.Mesh(new THREE.CylinderGeometry(.25, .18, .25, 8), woodM(0xffeecc)); nsLamp.position.set(2.3, .85, -2); grp.add(nsLamp);
+        const nsLight = new THREE.PointLight(0xffcc88, .5, 4); nsLight.position.set(2.3, .9, -2); grp.add(nsLight);
+        // Nightstand
+        const ns = new THREE.Mesh(new THREE.BoxGeometry(.7, .62, .7), woodM(0x8b4513)); ns.position.set(2.3, .31, -2); grp.add(ns);
+        // Wardrobe on -Z wall
+        const wd = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.0, .7), woodM(0x6a3818)); wd.position.set(-3, 1.5, -6.5); grp.add(wd);
+        const wddr = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.7, .06), woodM(0x5a2810)); wddr.position.set(-2.4, 1.5, -6.18); grp.add(wddr);
+        const wddl = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.7, .06), woodM(0x5a2810)); wddl.position.set(-3.6, 1.5, -6.18); grp.add(wddl);
+        const wdKnob1 = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 6), woodM(0xd4a017)); wdKnob1.position.set(-2.95, 1.5, -6.15); grp.add(wdKnob1);
+        const wdKnob2 = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 6), woodM(0xd4a017)); wdKnob2.position.set(-4.05, 1.5, -6.15); grp.add(wdKnob2);
+        // Window on -Z wall
+        const win2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.6, .05), new THREE.MeshLambertMaterial({ color: 0x88ccee, emissive: 0x4466aa, emissiveIntensity: .35 })); win2.position.set(3, 2.2, -6.92); grp.add(win2);
+        const wf2 = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.85, .08), dM); wf2.position.set(3, 2.2, -6.88); grp.add(wf2);
+        // Rug beside bed
+        const rug3 = new THREE.Mesh(new THREE.BoxGeometry(2.5, .02, 4.0), new THREE.MeshLambertMaterial({ color: 0x997766 })); rug3.position.set(2.2, .01, 0); grp.add(rug3);
+        // Wall picture
+        const pic = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, .05), new THREE.MeshLambertMaterial({ color: 0xffcc88 })); pic.position.set(5.5, 2.3, -6.9); grp.add(pic);
+        const picF = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, .07), dM); picF.position.set(5.5, 2.3, -6.87); grp.add(picF);
+      }
+
+      if (name === 'garden') {
+        // Garden path (wider)
+        const path = new THREE.Mesh(new THREE.BoxGeometry(2.2, .06, 12), woodM(0x9a8060)); path.position.set(0, .03, 0); grp.add(path);
+        // Flower beds (more, spread wider)
+        [[0xcc4466, -5], [0xeecc22, -3], [0xff6688, -1], [0xcc88ff, 1], [0x44ddaa, 3], [0xff9933, 5]].forEach(([c, x]) => {
+          const fb = new THREE.Mesh(new THREE.BoxGeometry(.9, .16, 1.4), woodM(0x3a5a18)); fb.position.set(x, .08, -4); grp.add(fb);
+          const fl = new THREE.Mesh(new THREE.SphereGeometry(.28, 6, 6), woodM(c)); fl.position.set(x, .5, -4); grp.add(fl);
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .42, 6), woodM(0x3a8a20)); stem.position.set(x, .24, -4); grp.add(stem);
+          // Leaf
+          const leaf = new THREE.Mesh(new THREE.BoxGeometry(.35, .04, .22), woodM(0x2a7a10)); leaf.position.set(x + .2, .3, -4); grp.add(leaf);
+        });
+        // Second row of flowers on other side of path
+        [[0xee4488, -4.5], [0xaaee22, -2.5], [0x44aaff, -.5], [0xffaa44, 1.5], [0xcc66ff, 3.5]].forEach(([c, x]) => {
+          const fl2 = new THREE.Mesh(new THREE.SphereGeometry(.22, 6, 6), woodM(c)); fl2.position.set(x, .4, 1.5); grp.add(fl2);
+          const stem2 = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .35, 6), woodM(0x3a8a20)); stem2.position.set(x, .18, 1.5); grp.add(stem2);
+        });
+        // Tree (trunk + canopy)
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.2, .28, 1.8, 8), woodM(0x7a5020)); trunk.position.set(5, .9, 4); grp.add(trunk);
+        const canopy1 = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 8), woodM(0x2a7a18)); canopy1.position.set(5, 2.6, 4); grp.add(canopy1);
+        const canopy2 = new THREE.Mesh(new THREE.SphereGeometry(.9, 8, 8), woodM(0x3a8a22)); canopy2.position.set(5.8, 3.2, 4.3); grp.add(canopy2);
+        // Garden bench
+        const bseat = new THREE.Mesh(new THREE.BoxGeometry(2.0, .12, .6), woodM(0xaa7744)); bseat.position.set(-5, .55, 4); grp.add(bseat);
+        const bback = new THREE.Mesh(new THREE.BoxGeometry(2.0, .65, .1), woodM(0xaa7744)); bback.position.set(-5, .97, 4.28); grp.add(bback);
+        [[-4.1, .27, 3.75], [-5.9, .27, 3.75], [-4.1, .27, 4.25], [-5.9, .27, 4.25]].forEach(([x, y, z]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.12, .53, .12), woodM(0x8a5a30)); l.position.set(x, y, z); grp.add(l); });
+        // Birdbath
+        const bbPole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .1, 1.0, 8), woodM(0x888888)); bbPole.position.set(-5.5, .5, -1); grp.add(bbPole);
+        const bbBowl = new THREE.Mesh(new THREE.CylinderGeometry(.4, .2, .18, 10), woodM(0xaaaaaa)); bbBowl.position.set(-5.5, 1.08, -1); grp.add(bbBowl);
+        const water = new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .05, 10), new THREE.MeshLambertMaterial({ color: 0x4488cc })); water.position.set(-5.5, 1.15, -1); grp.add(water);
+        // Fence (wider, with gate)
+        [-6, -4, -2, 0, 2, 4, 6].forEach(x => { const fp = new THREE.Mesh(new THREE.BoxGeometry(.12, 1.3, .12), woodM(0xe8d098)); fp.position.set(x, .65, -6.8); grp.add(fp); });
+        const frailTop = new THREE.Mesh(new THREE.BoxGeometry(14, .12, .12), woodM(0xe8d098)); frailTop.position.set(0, 1.1, -6.8); grp.add(frailTop);
+        const frailMid = new THREE.Mesh(new THREE.BoxGeometry(14, .12, .12), woodM(0xe8d098)); frailMid.position.set(0, .65, -6.8); grp.add(frailMid);
+        // Small pond
+        const pond = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, .08, 12), new THREE.MeshLambertMaterial({ color: 0x2255aa })); pond.position.set(4.5, .04, -1); grp.add(pond);
+        const pondEdge = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, .12, 12), woodM(0x888877)); pondEdge.position.set(4.5, .0, -1); grp.add(pondEdge);
+      }
+    }
+
+    /* ═══════════ FRONT DOOR (LOCKED) ═══════════ */
+    let frontDoorObj = { pos: new THREE.Vector3(0, 0, -7), unlocked: false, light: null };
+    function buildFrontDoor() {
+      const grp = new THREE.Group();
+      const center = RC.garden.clone().add(new THREE.Vector3(0, 0, -7)); // -RD/2
+      grp.position.copy(center);
+      const fMat = new THREE.MeshLambertMaterial({ color: 0x4a1e08, map: createWoodTexture('#4a1e08') });
+      const dMat = new THREE.MeshLambertMaterial({ color: 0x3a1208, map: createWoodTexture('#3a1208') });
+      // Frame
+      const lp = new THREE.Mesh(new THREE.BoxGeometry(.2, DOOR_H, .2), fMat); lp.position.set(-DOOR_W / 2, DOOR_H / 2, 0); grp.add(lp);
+      const rp = new THREE.Mesh(new THREE.BoxGeometry(.2, DOOR_H, .2), fMat); rp.position.set(DOOR_W / 2, DOOR_H / 2, 0); grp.add(rp);
+      const top = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W + .4, .2, .2), fMat); top.position.set(0, DOOR_H, 0); grp.add(top);
+      // Large Main Door (Swing hinge)
+      const doorPivot = new THREE.Group();
+      doorPivot.position.set(-DOOR_W / 2 + .1, 0, 0); // hinge on left side
+      // Door leaf (closed)
+      const door = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W - .05, DOOR_H - .05, .15), dMat); 
+      door.position.set(DOOR_W / 2 - .1, DOOR_H / 2, 0); doorPivot.add(door);
+      // Panels
+      const panM = new THREE.MeshLambertMaterial({ color: 0x4a1e08 });
+      [[-.5, DOOR_H * .7], [.5, DOOR_H * .7], [-.5, DOOR_H * .35], [.5, DOOR_H * .35]].forEach(([x, y]) => { const p = new THREE.Mesh(new THREE.BoxGeometry(.7, .5, .04), panM); p.position.set(x + DOOR_W / 2 - .1, y, .08); doorPivot.add(p); });
+      // Knocker
+      const knock = new THREE.Mesh(new THREE.TorusGeometry(.1, .025, 6, 12), new THREE.MeshLambertMaterial({ color: 0xd4a017 }));
+      knock.position.set(DOOR_W / 2 - .1, DOOR_H * .6, .12); doorPivot.add(knock);
+      // Main Keyhole / Handle
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(.05, .4, .05), new THREE.MeshLambertMaterial({ color: 0xaaaaaa }));
+      handle.position.set(DOOR_W - .3, DOOR_H * .45, .12); doorPivot.add(handle);
+      grp.add(doorPivot);
+      frontDoorObj.pivot = doorPivot;
+
+      // EXIT bright green sign
+      const signBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, .6, .1), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+      signBoard.position.set(0, DOOR_H + 0.6, .1); grp.add(signBoard);
+      const ctx = document.createElement('canvas').getContext('2d'); ctx.canvas.width = 256; ctx.canvas.height = 128;
+      ctx.fillStyle = '#111'; ctx.fillRect(0,0,256,128);
+      ctx.fillStyle = '#0f0'; ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('EXIT', 128, 64);
+      const signTex = new THREE.CanvasTexture(ctx.canvas);
+      const signText = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .5), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+      signText.position.set(0, DOOR_H + 0.6, .16); grp.add(signText);
+
+      // Lock light (red = locked)
+      const lockL = new THREE.PointLight(0xff3300, 1.5, 3); lockL.position.set(0, DOOR_H * .5, .3); grp.add(lockL);
+      frontDoorObj.light = lockL;
+      // Label floating
+      scene.add(grp);
+
+      // This wall segment is a collision wall
+      wallBoxes.push({ min: new THREE.Vector3(center.x - DOOR_W / 2 - .1, 0, center.z - .3), max: new THREE.Vector3(center.x + DOOR_W / 2 + .1, WH, center.z + .3) });
+
+      // Interactable
+      interactables.push({ pos: center.clone().add(new THREE.Vector3(0, 1.5, .5)), radius: 2.5, id: 'front_door', label: 'Front Door 🚪' });
+    }
+
+    /* ═══════════ PUZZLE OBJECTS (GLOWING ITEMS) ═══════════ */
+    let interactables = [];
+    let iobjs = {}; // id->group
+
+    const OBJ_OFFSETS = {
+      tin:   { kitchen: [-4, .7, -5.5] },
+      clock: { kitchen: [4.5, 1.8, -6.85] },
+      book:  { lounge:  [0, .7, 4.5] },
+      shelf: { library: [-1, 1.3, -5.5] },
+      lamp:  { bedroom: [2.3, .7, -2] },
+      vase:  { garden:  [1.5, .7, 2.5] },
+    };
+
+    function buildInteractables(puzzles) {
+      puzzles.forEach(p => {
+        const offs = OBJ_OFFSETS[p.id];
+        if (!offs || !offs[p.room]) return;
+        const [ox, oy, oz] = offs[p.room];
+        const rC = RC[p.room];
+        if (!rC) return;
+        const wPos = new THREE.Vector3(rC.x + ox, oy, rC.z + oz);
+
+        const grp = new THREE.Group(); grp.position.copy(wPos);
+
+        // Cartoon object box
+        const colors = { tin: 0xd4a040, clock: 0x8b4513, book: 0xcc4444, shelf: 0x4488cc, lamp: 0xf5d060, vase: 0xee66aa };
+        const c = colors[p.id] || 0xf5b942;
+        const geo = new THREE.BoxGeometry(.7, .7, .7);
+        const mat = new THREE.MeshToonMaterial({ color: c, emissive: new THREE.Color(c).multiplyScalar(.3) });
+        const box = new THREE.Mesh(geo, mat); box.castShadow = true; grp.add(box);
+        // Outline
+        const out = box.clone(); out.material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }); out.scale.multiplyScalar(1.1); grp.add(out);
+        // Emoji label (billboard plane)
+        const glowL = new THREE.PointLight(0xffaa22, .7, 3); glowL.position.set(0, 0, 0); grp.add(glowL);
+
+        grp.userData = { pid: p.id, glow: glowL, baseY: wPos.y, phase: Math.random() * Math.PI * 2 };
+        scene.add(grp);
+        iobjs[p.id] = grp;
+
+        interactables.push({ pos: wPos, radius: 2, id: p.id, label: p.name + ' ' + p.icon });
+      });
+    }
+
+    /* ═══════════ PLAYER STATE ═══════════ */
+    const player = {
+      pos: new THREE.Vector3(0, .01, 2),
+      vel: new THREE.Vector3(),
+      yaw: 0,  // facing angle
+      walkPhase: 0,
+      moving: false,
+      R: .35,  // collision radius
+      H: 2.6,  // collision height
+    };
+
+    /* ═══════════ GRANNY STATE ═══════════ */
+    // Granny sits in her armchair in the Lounge.
+    // Lounge centre = (14,0,0); armchair local = (-4.5, 0, 3.2) → world = (9.5, 0, 3.2)
+    const GRANNY_CHAIR_POS = new THREE.Vector3(9.5, 0, 3.2);
+    const granny = {
+      pos: GRANNY_CHAIR_POS.clone(),
+      target: GRANNY_CHAIR_POS.clone(),
+      wander: 0,
+      walkPhase: 0,
+      speed: 0, // seated — won't move
+    };
+
+    /* ═══════════ LIGHTING ═══════════ */
+    scene.add(new THREE.AmbientLight(0xffe8cc, .4));
+    const moonL = new THREE.DirectionalLight(0x9aaabb, .25);
+    moonL.position.set(-5, 12, 5); moonL.castShadow = true; scene.add(moonL);
+
+    /* ═══════════ INPUT ═══════════ */
+    const K = {}; const mk2 = { f: 0, b: 0, l: 0, r: 0, sp: 0 };
+    addEventListener('keydown', e => { K[e.code] = 1; if ((e.code === 'KeyE' || e.code === 'Space') && gameRunning) { e.preventDefault(); tryInteract(); } });
+    addEventListener('keyup', e => { K[e.code] = 0; });
+
+    // Look drag
+    let drag = false, dragLX = 0, dragLY = 0;
+    let camYaw = 0, camPitch = .55;
+    function onDragStart(x, y) { drag = true; dragLX = x; dragLY = y; }
+    function onDragMove(x, y) { if (!drag) return; camYaw -= (x - dragLX) * .0035; camPitch -= (y - dragLY) * .0035; camPitch = Math.max(.05, Math.min(1.3, camPitch)); dragLX = x; dragLY = y; }
+    function onDragEnd() { drag = false; }
+    canvas.addEventListener('mousedown', e => { if (e.button === 0) onDragStart(e.clientX, e.clientY); });
+    canvas.addEventListener('mousemove', e => onDragMove(e.clientX, e.clientY));
+    canvas.addEventListener('mouseup', onDragEnd);
+    canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) { onDragStart(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: true });
+    canvas.addEventListener('touchmove', e => { if (e.touches.length === 1) onDragMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    canvas.addEventListener('touchend', onDragEnd);
+
+    /* ═══════════ COLLISION ═══════════ */
+    // AABB vs cylinder (player) using simple swept approach
+    function collideCylinder(pos, radius) {
+      // pos = player center at ground level
+      const px = pos.x, pz = pos.z;
+      const py0 = 0, py1 = player.H;
+      let moved = false;
+      wallBoxes.forEach(({ min, max }) => {
+        // Only check walls that could be at player height
+        if (max.y < 0 || min.y > player.H + .1) return;
+        // Find closest point on AABB in XZ to circle center
+        const cx = Math.max(min.x, Math.min(px, max.x));
+        const cz = Math.max(min.z, Math.min(pz, max.z));
+        const dx = px - cx, dz = pz - cz;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < radius && dist > 0.0001) {
+          // Push out
+          const pen = radius - dist;
+          pos.x += dx / dist * pen;
+          pos.z += dz / dist * pen;
+          moved = true;
+        } else if (dist < 0.0001) {
+          // Inside wall — push toward nearest face
+          const distToX = Math.min(Math.abs(px - min.x), Math.abs(px - max.x));
+          const distToZ = Math.min(Math.abs(pz - min.z), Math.abs(pz - max.z));
+          if (distToX < distToZ) pos.x += (px - min.x < max.x - px ? -1 : 1) * radius;
+          else pos.z += (pz - min.z < max.z - pz ? -1 : 1) * radius;
+          moved = true;
+        }
+      });
+      return moved;
+    }
+
+    /* ═══════════ CAMERA (3rd person, no wall clip) ═══════════ */
+    const CAM_DIST = 5.5, CAM_H = 2.5, CAM_MIN_DIST = 1.5;
+
+    function updateCamera() {
+      // Ideal camera pos
+      const tx = player.pos.x - Math.sin(camYaw) * CAM_DIST;
+      const tz = player.pos.z - Math.cos(camYaw) * CAM_DIST;
+      const ty = player.pos.y + CAM_H;
+
+      // Raycast from player toward ideal camera position to find shortest safe distance
+      const dir = new THREE.Vector3(tx - player.pos.x, ty - player.pos.y - 1, tz - player.pos.z).normalize();
+      let safeDist = CAM_DIST;
+      // Check AABB intersections along ray
+      const origin = new THREE.Vector3(player.pos.x, player.pos.y + 1.4, player.pos.z);
+      wallBoxes.forEach(({ min, max }) => {
+        const inv = new THREE.Vector3(dir.x === 0 ? Infinity : 1 / dir.x, dir.y === 0 ? Infinity : 1 / dir.y, dir.z === 0 ? Infinity : 1 / dir.z);
+        const t1 = (min.x - origin.x) * inv.x, t2 = (max.x - origin.x) * inv.x;
+        const t3 = (min.y - origin.y) * inv.y, t4 = (max.y - origin.y) * inv.y;
+        const t5 = (min.z - origin.z) * inv.z, t6 = (max.z - origin.z) * inv.z;
+        const tmin = Math.max(Math.max(Math.min(t1, t2), Math.min(t3, t4)), Math.min(t5, t6));
+        const tmax = Math.min(Math.min(Math.max(t1, t2), Math.max(t3, t4)), Math.max(t5, t6));
+        if (tmax >= 0 && tmin < tmax && tmin > 0 && tmin < safeDist) safeDist = Math.max(CAM_MIN_DIST, tmin - .3);
+      });
+
+      const scaleD = safeDist / CAM_DIST;
+      camera.position.set(
+        player.pos.x - Math.sin(camYaw) * CAM_DIST * scaleD,
+        player.pos.y + CAM_H * scaleD,
+        player.pos.z - Math.cos(camYaw) * CAM_DIST * scaleD
+      );
+      camera.lookAt(player.pos.x, player.pos.y + 1.4, player.pos.z);
+    }
+
+    /* ═══════════ GAME STATE ═══════════ */
+    let gameRunning = false, awake = 0, score = 0, inventory = [], solvedSet = new Set(), caughtLock = false;
+    const KEYS_NEEDED = ['key_A', 'key_B', 'key_C', 'key_D'];
+    let puzzleMap = {};
+
+    /* ═══════════ AWAKE / GRANNY ═══════════ */
+    function setAwake(v) {
+      awake = Math.min(100, Math.max(0, v));
+      document.getElementById('awFill').style.width = awake + '%';
+      const f = document.getElementById('awFace');
+      if (awake < 25) f.textContent = '😴'; else if (awake < 50) f.textContent = '😪'; else if (awake < 75) f.textContent = '😤'; else if (awake < 100) f.textContent = '😠'; else { f.textContent = '😡'; triggerCaught(); }
+    }
+    function wakeGranny(n = 18) { setAwake(awake + n); beep(200, .3, 'sawtooth'); }
+
+    /* ═══════════ INTERACT ═══════════ */
+    function findNearby() {
+      return interactables.find(o => {
+        if (o.id !== 'front_door' && solvedSet.has(o.id)) return false;
+        return player.pos.distanceTo(o.pos) <= o.radius;
+      });
+    }
+
+    function tryInteract() {
+      if (!gameRunning) return;
+      if (document.getElementById('pmodal').classList.contains('open')) return;
+      const near = findNearby();
+      if (!near) { toast('Walk closer to a glowing object! (E or Space)'); return; }
+      if (near.id === 'front_door') { tryEscape(); return; }
+      openPuzzle(near.id);
+    }
+
+    function tryEscape() {
+      const have = KEYS_NEEDED.filter(k => inventory.includes(k)).length;
+      if (have < KEYS_NEEDED.length) { wakeGranny(6); toast(`🔒 Need ${KEYS_NEEDED.length} keys — have ${have}. Keep searching!`, 2500); speak(`You need all four keys. You have ${have} so far!`); return; }
+      
+      // Swing open the big main door
+      if (!frontDoorObj.opening) {
+        frontDoorObj.opening = true;
+        toast('🔓 The Main Door is unlocked!', 2000);
+        speak('The main door is open! You escaped!');
+        setTimeout(doVictory, 2000);
+      }
+    }
+
+    /* ═══════════ PUZZLE MODAL ═══════════ */
+    let activePid = null, pSt = {};
+    function openPuzzle(id) {
+      if (solvedSet.has(id)) { toast('Already solved! ✓'); return; }
+      activePid = id; pSt = {};
+      const p = puzzleMap[id]; if (!p) return;
+      document.getElementById('pIco').textContent = p.icon;
+      document.getElementById('pNm').textContent = p.name;
+      document.getElementById('pSb').textContent = 'NCERT · ' + selSubj.toUpperCase() + ' · Class ' + selCls;
+      buildPBody(p);
+      document.getElementById('pmodal').classList.add('open');
+      speak(p.q, 300);
+    }
+    function closePuzzle() { document.getElementById('pmodal').classList.remove('open'); activePid = null; pSt = {}; }
+
+    function buildPBody(p) {
+      const body = document.getElementById('pBody'); body.innerHTML = '';
+      const gm = el('div', 'pgm', `<span class="gf">${awake < 40 ? '😴' : awake < 70 ? '😪' : '😤'}</span><span class="gm">Granny is ${Math.round(awake)}% awake — wrong answers wake her!</span>`); body.appendChild(gm);
+      const badge = el('div', 'pbadge', p.badge || '🎯'); body.appendChild(badge);
+      const q = el('div', 'pq', p.q); body.appendChild(q);
+      if (p.visual) body.appendChild(el('div', 'pvis', p.visual));
+      if (p.hint) body.appendChild(el('div', 'phnt', '💡 ' + p.hint));
+      if (p.type === 'fill') buildFill(body, p);
+      else if (p.type === 'sort') p.bins ? buildBins(body, p) : buildOrder(body, p);
+      else if (p.type === 'match') buildMatch(body, p);
+      else if (p.type === 'count') buildCount(body, p);
+      else if (p.type === 'sequence') buildSeq(body, p);
+      body.appendChild(el('div', 'pfb', '', 'pfb'));
+    }
+
+    function el(tag, cls, inner = '', id = '') { const e = document.createElement(tag); e.className = cls; if (id) e.id = id; if (inner) e.innerHTML = inner; return e; }
+    function chip(txt, i) { const c = el('div', 'chip', txt); c.style.setProperty('--cd', (i * .07) + 's'); return c; }
+    function rebuildTray(tray, arr) { tray.innerHTML = arr.length ? '' : '<span class="trayph">Tap in order…</span>'; arr.forEach(v => { const s = el('div', 'chip', v); s.style.fontSize = '.85rem'; tray.appendChild(s); }); }
+    function showFb(ok, msg) { const fb = document.getElementById('pfb'); if (!fb) return; fb.textContent = msg; fb.className = 'pfb ' + (ok ? 'ok' : 'no') + ' show'; if (ok) setTimeout(() => fb.classList.remove('show'), 2000); }
+    function mkSub(cb) { const b = el('button', 'psub', 'Check Answer 🔍'); b.onclick = cb; return b; }
+
+    const OKS = ['Magnificent! Spot on!', 'Splendid! Well done!', 'Brilliant! You clever thing!', 'Wonderful! Correct!'];
+    const NOS = ['Oh dear! Wrong — Granny stirred!', 'Oops! That woke Granny a bit!', 'Not quite! Granny heard you!'];
+
+    function onOK(p) {
+      score += 10; document.getElementById('scDisp').textContent = score;
+      solvedSet.add(p.id);
+      if (iobjs[p.id]) { iobjs[p.id].children[0].material.color.set(0x888888); iobjs[p.id].children[0].material.emissive && iobjs[p.id].children[0].material.emissive.set(0x000000); iobjs[p.id].userData.glow.intensity = 0; }
+      if (p.gives) { inventory.push(p.gives); if (p.gives.startsWith('key_')) giveKey(p.gives); }
+      const msg = OKS[Math.floor(Math.random() * OKS.length)];
+      showFb(true, '✅ ' + msg); speak(msg); confetti(false); setTimeout(closePuzzle, 2200);
+    }
+    function onNO(p) { wakeGranny(); showFb(false, '❌ ' + NOS[Math.floor(Math.random() * NOS.length)]); speak(NOS[0]); }
+    function onNOSoft(m) { wakeGranny(8); showFb(false, '❌ ' + m); speak(m); }
+
+    function buildFill(body, p) {
+      const sent = el('div', 'fsent', '');
+      const blank = el('span', 'blank', '______');
+      const pts = p.sentence.split('__');
+      sent.appendChild(document.createTextNode(pts[0])); sent.appendChild(blank); if (pts[1]) sent.appendChild(document.createTextNode(pts[1]));
+      body.appendChild(sent);
+      const chips = el('div', 'chips', '');
+      shuffle(p.options).forEach((o, i) => {
+        const c = chip(o, i);
+        c.onclick = () => { document.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on'); blank.textContent = o; blank.className = 'blank ok'; pSt.v = String(o); beep(440, .08); };
+        chips.appendChild(c);
+      });
+      body.appendChild(chips);
+      body.appendChild(mkSub(() => { if (!pSt.v) { speak('Choose an answer!'); return; } pSt.v === String(p.blank) ? onOK(p) : (blank.className = 'blank bad', onNO(p)); }));
+    }
+
+    function buildBins(body, p) {
+      const bd = {}; p.bins.forEach(b => bd[b] = []);
+      body.appendChild(el('div', 'phnt', 'Tap each item to assign to a category!'));
+      const chips = el('div', 'chips', '');
+      shuffle(p.items).forEach((item, i) => {
+        const c = chip(item, i); let bi = -1;
+        c.onclick = () => { bi = (bi + 1) % p.bins.length; const bn = p.bins[bi]; p.bins.forEach(b => bd[b] = bd[b].filter(x => x !== item)); bd[bn].push(item); c.classList.add('on'); c.textContent = item + ' → ' + bn.replace(/[✅❌💚🌱🪨🔵🔴🧑🏃1️⃣🔢]/g, '').trim(); beep(440, .07); };
+        chips.appendChild(c);
+      });
+      body.appendChild(chips);
+      body.appendChild(mkSub(() => {
+        let ok = true; p.bins.forEach(b => { const e = p.answer[b] || [], g = bd[b] || []; if (e.length !== g.length) ok = false; e.forEach(x => { if (!g.includes(x)) ok = false; }); });
+        ok ? onOK(p) : onNO(p);
+      }));
+    }
+
+    function buildOrder(body, p) {
+      const tray = el('div', 'tray', '<span class="trayph">Tap in order…</span>');
+      let chosen = [];
+      const chips = el('div', 'chips', '');
+      shuffle(p.items).forEach((item, i) => {
+        const c = chip(item, i);
+        c.onclick = () => { if (c.classList.contains('on')) { c.classList.remove('on'); chosen = chosen.filter(x => x !== item); } else { c.classList.add('on'); chosen.push(item); } rebuildTray(tray, chosen); beep(440, .07); };
+        chips.appendChild(c);
+      });
+      body.appendChild(tray); body.appendChild(chips);
+      body.appendChild(mkSub(() => { if (chosen.length !== p.answer.length) { speak('Select all!'); return; } JSON.stringify(chosen) === JSON.stringify(p.answer) ? onOK(p) : onNO(p); }));
+    }
+
+    function buildMatch(body, p) {
+      const cols = el('div', 'mcols', '');
+      const lc = el('div', 'mcol', ''), rc = el('div', 'mcol', '');
+      const rights = shuffle(p.pairs.map(pr => pr.right));
+      let selL = null, matched = {}; const lEls = {};
+      p.pairs.forEach((pr, i) => {
+        const c = chip(pr.left, i); c.dataset.k = pr.left;
+        c.onclick = () => { document.querySelectorAll('[data-k]').forEach(e => e.style.outline = ''); selL = pr.left; c.style.outline = '2px solid #c8820a'; beep(550, .07); };
+        lEls[pr.left] = c; lc.appendChild(c);
+      });
+      rights.forEach((r, i) => {
+        const c = chip(r, i); c.dataset.r = r;
+        c.onclick = () => {
+          if (!selL) { speak('Tap left side first!'); return; } if (c.classList.contains('matched')) return;
+          const corr = p.pairs.find(pr => pr.left === selL)?.right;
+          if (r === corr) { lEls[selL].classList.add('matched'); c.classList.add('matched'); matched[selL] = r; selL = null; beep(660, .1); beep(880, .08); if (Object.keys(matched).length === p.pairs.length) setTimeout(() => onOK(p), 400); }
+          else { c.classList.add('bad'); setTimeout(() => c.classList.remove('bad'), 500); onNOSoft('Wrong pair!'); }
+        };
+        rc.appendChild(c);
+      });
+      cols.appendChild(lc); cols.appendChild(rc); body.appendChild(cols);
+    }
+
+    function buildCount(body, p) {
+      const grid = el('div', 'cobjs', '');
+      let tapped = 0;
+      const tally = el('div', 'cn', '0');
+      shuffle(p.items).forEach((item, i) => {
+        const e = el('span', 'cobj', item); e.style.setProperty('--cd', (i * .13) + 's');
+        e.onclick = () => {
+          if (e.classList.contains('tapped')) return;
+          if (p.filterCheck && !p.filterCheck(item)) { e.classList.add('bad'); setTimeout(() => e.classList.remove('bad'), 400); beep(200, .15, 'sawtooth'); return; }
+          e.classList.add('tapped'); tapped++; tally.textContent = tapped; beep(660, .08);
+        };
+        grid.appendChild(e);
+      });
+      body.appendChild(grid); body.appendChild(tally);
+      body.appendChild(mkSub(() => tapped === p.answer ? onOK(p) : onNO(p)));
+    }
+
+    function buildSeq(body, p) {
+      const tray = el('div', 'tray', '<span class="trayph">Tap in correct order…</span>');
+      let chosen = [];
+      const chips = el('div', 'chips', '');
+      shuffle(p.items).forEach((item, i) => {
+        const c = chip(item, i);
+        c.onclick = () => {
+          if (c.dataset.n) { chosen = chosen.filter(x => x !== item); delete c.dataset.n; c.classList.remove('on'); }
+          else { chosen.push(item); c.dataset.n = chosen.length; c.classList.add('on'); }
+          rebuildTray(tray, chosen); beep(440, .07);
+        };
+        chips.appendChild(c);
+      });
+      body.appendChild(tray); body.appendChild(chips);
+      body.appendChild(mkSub(() => { if (chosen.length !== p.answer.length) { speak('Select all items!'); return; } JSON.stringify(chosen) === JSON.stringify(p.answer) ? onOK(p) : onNO(p); }));
+    }
+
+    /* ═══════════ KEYS HUD ═══════════ */
+    function giveKey(k) {
+      const idx = KEYS_NEEDED.indexOf(k); if (idx < 0) return;
+      document.getElementById('k' + idx).classList.add('got');
+      const have = KEYS_NEEDED.filter(x => inventory.includes(x)).length;
+      toast(`🗝️ Key ${have}/${KEYS_NEEDED.length} collected!`, 2000);
+      if (have >= KEYS_NEEDED.length) {
+        setTimeout(() => { toast('🚪 All keys! Find the Front Door in the Garden!', 3000); speak('You have all four keys! Get to the front door in the garden!'); }, 400);
+        if (frontDoorObj.light) frontDoorObj.light.color.set(0x00ff44);
+        frontDoorObj.unlocked = true;
+      }
+    }
+
+    /* ═══════════ CAUGHT / VICTORY ═══════════ */
+    function triggerCaught() {
+      if (caughtLock) return; caughtLock = true; closePuzzle();
+      const msgs = ['Granny woke up! She\'s sending you back to the kitchen. Be quieter!', 'All that noise! Granny caught you — back to the start!', 'Oh dearie! Granny heard you — back to the kitchen!'];
+      document.getElementById('cMsg').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      document.getElementById('cmod').classList.add('open');
+      speak('Oh dearie me! Granny caught you!');
+    }
+    function dismissCaught() { document.getElementById('cmod').classList.remove('open'); setAwake(12); caughtLock = false; player.pos.set(0, .01, 2); player.vel.set(0, 0, 0); }
+
+    function doVictory() {
+      gameRunning = false;
+      const pct = score / (Object.keys(puzzleMap).length * 10);
+      const stars = pct >= .85 ? 3 : pct >= .55 ? 2 : 1;
+      document.getElementById('vSc').textContent = score + ' pts';
+      document.getElementById('vSt').textContent = se(stars);
+      document.getElementById('vMsg').textContent = { 3: 'Sneaked past Granny perfectly! Outstanding! 🏆', 2: 'Almost perfect! Well done! 🎉', 1: 'Made it out! Practice more! 💪' }[stars];
+      document.getElementById('vmod').classList.add('open');
+      confetti(true); speak('Congratulations! You escaped Granny\'s house!');
+    }
+
+    /* ═══════════ MINIMAP ═══════════ */
+    const mmCtx = document.getElementById('mmC').getContext('2d');
+    const ROOM_COLS = { kitchen: '#c8a050', lounge: '#a08060', library: '#3a2010', bedroom: '#c090a8', garden: '#5a8a30' };
+    function drawMinimap() {
+      mmCtx.fillStyle = 'rgba(0,0,0,.85)'; mmCtx.fillRect(0, 0, 110, 110);
+      const scl = 3.8, ox = 28, oy = 70;
+      Object.entries(RC).forEach(([name, pos]) => {
+        const x = ox + pos.x / scl, z = oy + pos.z / scl;
+        mmCtx.fillStyle = ROOM_COLS[name] || '#666'; mmCtx.fillRect(x - 5, z - 5, 10, 10);
+        mmCtx.fillStyle = 'rgba(253,246,227,.75)'; mmCtx.font = '5.5px sans-serif'; mmCtx.textAlign = 'center'; mmCtx.fillText(name[0].toUpperCase(), x, z + 2);
+      });
+      // Interactables
+      interactables.forEach(o => {
+        if (o.id === 'front_door' || solvedSet.has(o.id)) return;
+        const x = ox + o.pos.x / scl, z = oy + o.pos.z / scl;
+        mmCtx.fillStyle = '#f5b942'; mmCtx.beginPath(); mmCtx.arc(x, z, 2.5, 0, Math.PI * 2); mmCtx.fill();
+      });
+      // Granny
+      const gx = ox + granny.pos.x / scl, gz = oy + granny.pos.z / scl;
+      mmCtx.fillStyle = '#b04040'; mmCtx.beginPath(); mmCtx.arc(gx, gz, 3, 0, Math.PI * 2); mmCtx.fill();
+      // Player
+      const px = ox + player.pos.x / scl, pz = oy + player.pos.z / scl;
+      mmCtx.fillStyle = '#fff'; mmCtx.beginPath(); mmCtx.arc(px, pz, 3.5, 0, Math.PI * 2); mmCtx.fill();
+      mmCtx.strokeStyle = '#f5b942'; mmCtx.lineWidth = 1.5; mmCtx.beginPath();
+      mmCtx.moveTo(px, pz); mmCtx.lineTo(px + Math.sin(camYaw) * 8, pz + Math.cos(camYaw) * 8); mmCtx.stroke();
+    }
+
+    /* ═══════════ GAME LOOP ═══════════ */
+    const clock = new THREE.Clock();
+    let grannyWander = null;
+
+    function gameLoop() {
+      requestAnimationFrame(gameLoop);
+      renderer.render(scene, camera);
+      if (!gameRunning) return;
+
+      const dt = Math.min(clock.getDelta(), .05);
+      const t = performance.now() * .001;
+
+      // ── PLAYER MOVEMENT ──
+      let dx = 0, dz = 0;
+      if (K['KeyW'] || K['ArrowUp'] || mk2.f) { dx += Math.sin(camYaw); dz += Math.cos(camYaw); }
+      if (K['KeyS'] || K['ArrowDown'] || mk2.b) { dx -= Math.sin(camYaw); dz -= Math.cos(camYaw); }
+      if (K['KeyA'] || K['ArrowLeft'] || mk2.l) { dx -= Math.sin(camYaw - Math.PI / 2); dz -= Math.cos(camYaw - Math.PI / 2); }
+      if (K['KeyD'] || K['ArrowRight'] || mk2.r) { dx += Math.sin(camYaw - Math.PI / 2); dz += Math.cos(camYaw - Math.PI / 2); }
+      const spd = (K['ShiftLeft'] || K['ShiftRight'] || mk2.sp) ? 8.5 : 5;
+      const len = Math.sqrt(dx * dx + dz * dz);
+      player.moving = len > 0.01;
+      if (player.moving) {
+        const nx = dx / len, nz = dz / len;
+        player.pos.x += nx * spd * dt;
+        player.pos.z += nz * spd * dt;
+        player.yaw = Math.atan2(nx, nz);
+        player.walkPhase += dt * (spd > 6 ? 14 : 9);
+        // Collision resolve (multiple iterations for stability)
+        for (let i = 0; i < 3; i++) collideCylinder(player.pos, player.R);
+      }
+      player.pos.y = 0;
+
+      // ── CHARACTER ANIMATION ──
+      if (charGroup) {
+        charGroup.position.set(player.pos.x, 0, player.pos.z);
+        // Smooth rotation to facing direction
+        charGroup.rotation.y += ((player.moving ? player.yaw : charGroup.rotation.y) - charGroup.rotation.y) * .15;
+        if (player.moving) {
+          const wp = player.walkPhase;
+          charParts.legLG.rotation.x = Math.sin(wp) * .55;
+          charParts.legRG.rotation.x = Math.sin(wp + Math.PI) * .55;
+          charParts.armLG.rotation.x = Math.sin(wp + Math.PI) * .45;
+          charParts.armRG.rotation.x = Math.sin(wp) * .45;
+          // Slight body bob
+          charGroup.position.y = Math.abs(Math.sin(wp)) * .04;
+        } else {
+          charParts.legLG.rotation.x *= .85;
+          charParts.legRG.rotation.x *= .85;
+          charParts.armLG.rotation.x *= .85;
+          charParts.armRG.rotation.x *= .85;
+          charGroup.position.y *= .85;
+        }
+      }
+
+      // ── GRANNY AI (seated in armchair) ──
+      // She stays in her chair and stirs/looks around based on awake level
+      if (grannyGroup) {
+        grannyGroup.position.set(GRANNY_CHAIR_POS.x, 0, GRANNY_CHAIR_POS.z);
+        grannyGroup.rotation.y = Math.PI; // facing into the room (toward player start)
+        // Seated pose: hips bent, thighs horizontal, calves hanging
+        grannyParts.lLG.rotation.x = 1.35;
+        grannyParts.lRG.rotation.x = 1.35;
+        // Arms rest on armrests, lift slightly when more awake
+        const stir = awake / 100;
+        grannyParts.aLG.rotation.x = -0.25 + Math.sin(t * 0.8) * 0.12 * stir;
+        grannyParts.aRG.rotation.x = -0.25 + Math.sin(t * 0.8 + 1.0) * 0.12 * stir;
+        // Head turns side-to-side more when awake
+        if (grannyParts.head) grannyParts.head.rotation.y = Math.sin(t * (0.4 + stir * 1.2)) * (0.15 + stir * 0.4);
+      }
+      // Granny "catches" player if they get too close to her chair while she's awake
+      if (granny.pos.distanceTo(player.pos) < 2.0 && awake > 40) triggerCaught();
+
+      // ── OBJECT ANIMATIONS ──
+      Object.values(iobjs).forEach(g => {
+        if (solvedSet.has(g.userData.pid)) return;
+        g.position.y = g.userData.baseY + Math.sin(t * 2 + g.userData.phase) * .12;
+        g.rotation.y = t * .9;
+        if (g.userData.glow) g.userData.glow.intensity = .5 + Math.sin(t * 3.5 + g.userData.phase) * .3;
+      });
+
+      // ── DOORS OPENING ANIM ──
+      if (frontDoorObj.opening && frontDoorObj.pivot && frontDoorObj.pivot.rotation.y > -Math.PI / 2 + 0.1) {
+        frontDoorObj.pivot.rotation.y -= 2 * dt;
+      }
+
+      // ── NEARBY CHECK ──
+      const near = findNearby();
+      const ip = document.getElementById('iprompt');
+      if (near) { ip.textContent = `Press E / Space ·  ${near.label}`; ip.classList.add('show'); }
+      else ip.classList.remove('show');
+
+      // ── HUD ROOM ──
+      let closest = 'kitchen', closestD = 99;
+      Object.entries(RC).forEach(([n, p2]) => { const d = player.pos.distanceTo(p2); if (d < closestD) { closestD = d; closest = n; } });
+      document.getElementById('hudRoom').textContent = RNAMES[closest] || closest;
+
+      // ── CAMERA ──
+      updateCamera();
+      // ── MINIMAP ──
+      drawMinimap();
+    }
+
+    /* ═══════════ START / RESTART ═══════════ */
+    function startGame() {
+      // Clear scene
+      while (scene.children.length) scene.remove(scene.children[0]);
+      scene.add(new THREE.AmbientLight(0xffe8cc, .4)); moonL.castShadow = true; scene.add(moonL);
+
+      // Reset state
+      awake = 0; score = 0; inventory = []; solvedSet = new Set(); caughtLock = false; gameRunning = false;
+      wallBoxes.length = 0; interactables.length = 0;
+      Object.keys(iobjs).forEach(k => delete iobjs[k]);
+      charGroup = null; grannyGroup = null; charParts = {}; grannyParts = {};
+      frontDoorObj = { pos: new THREE.Vector3(0, 0, -7), unlocked: false, light: null, opening: false };
+      player.pos.set(0, .01, 2); player.vel.set(0, 0, 0); camYaw = 0; camPitch = .55;
+      setAwake(0); document.getElementById('scDisp').textContent = '0';
+      [0, 1, 2, 3].forEach(i => document.getElementById('k' + i).classList.remove('got'));
+
+      // Init puzzles
+      const puzzles = getPuzzles(selSubj, selCls);
+      puzzleMap = {}; puzzles.forEach(p => puzzleMap[p.id] = p);
+
+      // Build world
+      buildRooms();
+      buildFrontDoor();
+      buildInteractables(puzzles);
+      buildCharacter();
+      buildGranny();
+
+      // Show HUD
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('hud').style.display = 'block';
+      document.getElementById('mmap').style.display = 'block';
+
+      gameRunning = true;
+      clock.getDelta(); // reset clock
+      speak('Welcome to Granny\'s house! Use W A S D to move, drag mouse to look, and press E near glowing objects to interact. Collect four keys and escape through the front door in the garden!', 600);
+      toast('🏠 Entered the house! Find glowing objects to interact.', 3000);
+    }
+
+    function restartGame() { document.getElementById('vmod').classList.remove('open'); document.getElementById('cmod').classList.remove('open'); startGame(); }
+    function goHome() { gameRunning = false; document.getElementById('hud').style.display = 'none'; document.getElementById('mmap').style.display = 'none'; document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('home').classList.add('active'); document.getElementById('pmodal').classList.remove('open'); document.getElementById('cmod').classList.remove('open'); document.getElementById('vmod').classList.remove('open'); }
+
+    const SHIKSHA_PENDING_KEY = 'shikshakhel.pendingChildActivityLogs';
+    const trackedSession = { startedAt: Date.now() };
+    function queueChildActivity(activity) {
+      try {
+        const existing = JSON.parse(localStorage.getItem(SHIKSHA_PENDING_KEY) || '[]');
+        existing.push(activity);
+        localStorage.setItem(SHIKSHA_PENDING_KEY, JSON.stringify(existing));
+      } catch (e) {
+        localStorage.setItem(SHIKSHA_PENDING_KEY, JSON.stringify([activity]));
+      }
+    }
+    window.addEventListener('pagehide', () => {
+      const durationMinutes = Math.max(1, Math.round((Date.now() - trackedSession.startedAt) / 60000));
+      queueChildActivity({
+        type: 'study_session',
+        title: 'Shiksha Khel 3D Adventure',
+        subject: selSubj || 'General',
+        minutes: durationMinutes,
+        progressDelta: Math.max(1, Math.round(durationMinutes / 2)),
+        questionsSolved: score || 0,
+        source: 'shiksha-khel-3d (1).html',
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    gameLoop();
+  </script>
+</body>
+
+</html>

@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { User, Users, ShieldCheck, ArrowRight, Lock, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ParentEmailLogin } from './ParentEmailLogin';
-import { ParentChoiceModal } from './ParentChoiceModal';
-import { auth, db } from '../firebase';
+import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import type { User as FirebaseUser } from 'firebase/auth';
-import type { ChildProfile } from './AdminDashboard';
+import type { ChildProfile } from '../types/childProgress';
 
 export type UserRole = 'child' | 'parent' | 'admin';
 
@@ -15,24 +14,24 @@ interface ParentData {
   email: string;
   childName: string;
   childClass: string;
+  childAge: string;
+  schoolName: string;
+  learningGoal: string;
 }
 
 interface RoleSelectionProps {
   onSelect: (role: UserRole) => void;
   onParentLogin?: (user: FirebaseUser, parentData: ParentData, childProfile?: ChildProfile | null) => void;
+  canAutoOpenParentDashboard?: boolean;
 }
 
-export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
+export function RoleSelection({ onSelect, onParentLogin, canAutoOpenParentDashboard = false }: RoleSelectionProps) {
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [error, setError] = useState('');
   const [showChildName, setShowChildName] = useState(false);
   const [childName, setChildName] = useState('');
   const [showParentLogin, setShowParentLogin] = useState(false);
-  const [showParentChoice, setShowParentChoice] = useState(false);
-  const [currentParent, setCurrentParent] = useState<FirebaseUser | null>(null);
-  const [parentData, setParentData] = useState<ParentData | null>(null);
-  const [childProfile, setChildProfile] = useState<ChildProfile | null>(null);
 
   const handleAdminSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +43,13 @@ export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
   };
 
   const handleChildStart = () => {
-    setShowChildName(true);
+    // If child name is already in localStorage (from previous session or parent login), skip name entry
+    const existingName = localStorage.getItem('guestChildName');
+    if (existingName) {
+      onSelect('child');
+    } else {
+      setShowChildName(true);
+    }
   };
 
   const handleChildNameSubmit = (e: React.FormEvent) => {
@@ -57,15 +62,14 @@ export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
   };
 
   const handleParentComplete = async (user: FirebaseUser, pData: ParentData) => {
-    setCurrentParent(user);
-    setParentData(pData);
+    let fetchedChildProfile: ChildProfile | null = null;
 
     // Try to fetch child profile
     try {
       const childRef = doc(db, "children", `${user.uid}_child`);
       const childSnap = await getDoc(childRef);
       if (childSnap.exists()) {
-        setChildProfile({ id: childSnap.id, parentId: user.uid, ...childSnap.data() } as ChildProfile);
+        fetchedChildProfile = { id: childSnap.id, parentId: user.uid, ...childSnap.data() } as ChildProfile;
       }
     } catch (err) {
       console.warn("Could not fetch child profile:", err);
@@ -75,30 +79,12 @@ export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
     localStorage.setItem('parentHasVisited', 'true');
     localStorage.setItem('parentChildName', pData.childName);
 
-    // Show the choice modal
+    if (onParentLogin) {
+      onParentLogin(user, pData, fetchedChildProfile);
+    }
+
     setShowParentLogin(false);
-    setShowParentChoice(true);
-  };
-
-  const handleParentChoiceContinue = () => {
-    if (currentParent && parentData && onParentLogin) {
-      onParentLogin(currentParent, parentData, childProfile);
-    }
     onSelect('parent');
-  };
-
-  const handleParentChoiceDashboard = () => {
-    if (currentParent && parentData && onParentLogin) {
-      onParentLogin(currentParent, parentData, childProfile);
-    }
-    onSelect('admin'); // Reuse admin dashboard for parent
-  };
-
-  const handleParentChoiceLogout = () => {
-    setShowParentChoice(false);
-    setCurrentParent(null);
-    setParentData(null);
-    setChildProfile(null);
   };
 
   // Parent Login Flow
@@ -107,19 +93,6 @@ export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
       <ParentEmailLogin 
         onComplete={handleParentComplete}
         onBack={() => setShowParentLogin(false)}
-      />
-    );
-  }
-
-  // Parent Choice Modal (after successful login)
-  if (showParentChoice && parentData) {
-    return (
-      <ParentChoiceModal
-        parentData={parentData}
-        childProfile={childProfile}
-        onContinueChild={handleParentChoiceContinue}
-        onOpenDashboard={handleParentChoiceDashboard}
-        onLogout={handleParentChoiceLogout}
       />
     );
   }
@@ -294,7 +267,11 @@ export function RoleSelection({ onSelect, onParentLogin }: RoleSelectionProps) {
               } else if (role.id === 'child') {
                 handleChildStart();
               } else if (role.id === 'parent') {
-                setShowParentLogin(true);
+                if (canAutoOpenParentDashboard) {
+                  onSelect('parent');
+                } else {
+                  setShowParentLogin(true);
+                }
               }
             }}
             className="group relative flex flex-col items-center p-10 rounded-[2.5rem] bg-white/5 border border-white/10 transition-all hover:bg-white/10 hover:border-white/20 hover:scale-[1.05] active:scale-[0.98] text-center"
