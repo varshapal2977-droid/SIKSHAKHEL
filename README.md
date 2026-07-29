@@ -16,6 +16,8 @@ A high-end, dark-themed single-page website template with dramatic animations, b
 - Marquee text in footer with highlighted characters
 - Fully responsive with mobile menu
 - Reduced motion support
+## Deployed Link:
+https://sikshakhel-new.vercel.app
 
 ## Tech Stack
 
